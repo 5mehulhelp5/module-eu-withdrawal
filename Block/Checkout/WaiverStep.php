@@ -51,7 +51,7 @@ class WaiverStep extends Template
      */
     public function getContextUrl(): string
     {
-        return $this->url->getUrl('withdraw-contract/waiver/context');
+        return $this->url->getUrl('withdraw-contract/withdraw_waiver/context');
     }
 
     /**
@@ -61,6 +61,6 @@ class WaiverStep extends Template
      */
     public function getSaveUrl(): string
     {
-        return $this->url->getUrl('withdraw-contract/waiver/save');
+        return $this->url->getUrl('withdraw-contract/withdraw_waiver/save');
     }
 }

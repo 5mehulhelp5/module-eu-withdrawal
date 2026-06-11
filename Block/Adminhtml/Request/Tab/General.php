@@ -373,7 +373,7 @@ class General extends Template implements TabInterface
             \MageMe\EUWithdrawal\Model\Config\Source\ContractType::PHYSICAL_GOODS  => 'Physical goods',
             \MageMe\EUWithdrawal\Model\Config\Source\ContractType::DIGITAL_CONTENT => 'Digital content (non-tangible)',
             \MageMe\EUWithdrawal\Model\Config\Source\ContractType::DIGITAL_SERVICE => 'Digital service (SaaS / subscription)',
-            \MageMe\EUWithdrawal\Model\Config\Source\ContractType::FINANCIAL       => 'Financial services (Enterprise tier)',
+            \MageMe\EUWithdrawal\Model\Config\Source\ContractType::FINANCIAL       => 'Financial services (not supported)',
         ];
         return (string) __($map[$code] ?? ucwords(str_replace('_', ' ', $code)));
     }

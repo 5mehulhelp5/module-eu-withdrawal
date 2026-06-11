@@ -27,7 +27,7 @@ class ContractType implements OptionSourceInterface
             ['value' => self::PHYSICAL_GOODS,  'label' => __('Physical goods')],
             ['value' => self::DIGITAL_CONTENT, 'label' => __('Digital content (non-tangible)')],
             ['value' => self::DIGITAL_SERVICE, 'label' => __('Digital service (SaaS / subscription)')],
-            ['value' => self::FINANCIAL,       'label' => __('Financial services (Enterprise tier)')],
+            ['value' => self::FINANCIAL,       'label' => __('Financial services (not supported)')],
         ];
     }
 }

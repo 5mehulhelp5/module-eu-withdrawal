@@ -2,9 +2,6 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <preference for="MageMe\EUWithdrawal\Api\FeatureFlagInterface"
-                type="MageMe\EUWithdrawal\Model\FeatureFlag"/>
-
     <preference for="MageMe\EUWithdrawal\Api\Data\EligibilityRequestInterface"
                 type="MageMe\EUWithdrawal\Model\EligibilityRequest"/>
 

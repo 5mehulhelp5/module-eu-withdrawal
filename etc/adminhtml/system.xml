@@ -540,29 +540,6 @@
                 </group>
             </group>
 
-            <group id="retention" translate="label comment" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Privacy &amp; Retention</label>
-                <comment><![CDATA[
-                    Two-stage GDPR data lifecycle. Withdrawal requests carry both <em>personally identifiable</em> data (customer name, email, IP, user agent, admin notes, denial reasons) and a content hash that is the Art. 11a(4) <em>durable-medium</em> legal proof. The two have different mandatory retention periods and are aged out separately.
-                ]]></comment>
-
-                <field id="pii_retention_days" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>PII Retention (days)</label>
-                    <validate>validate-digits validate-digits-range digits-range-730-3650</validate>
-                    <comment><![CDATA[
-                        How long the <strong>personally identifiable fields</strong> (customer name, email, IP, user agent, denial reason, admin note) are kept before they are nullified by the daily privacy cron. The withdrawal record itself stays — only PII is wiped. Counted from the record's creation date.<br/><br/>
-                        <strong>Default: 730 days (2 years).</strong> This is the floor — GDPR Art. 5(1)(e) ("storage limitation") balanced against the statute of limitations for consumer-rights claims in most EU member states (1–2 years). Range: 730–3650 days.
-                    ]]></comment>
-                </field>
-                <field id="hash_retention_days" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>Hash Retention (days)</label>
-                    <validate>validate-digits validate-digits-range digits-range-2190-3650</validate>
-                    <comment><![CDATA[
-                        How long the <strong>content hash</strong> (Art. 11a(4) durable-medium proof) is retained. After PII has been wiped, the record keeps only the hash and receipt timestamps until this period expires; then the record is deleted entirely.<br/><br/>
-                        <strong>Default: 2190 days (6 years).</strong> Matches the longest commercial-records retention obligation in EU member states (typically 6 years for accounting / VAT). Must be ≥ PII Retention. Range: 2190–3650 days.
-                    ]]></comment>
-                </field>
-            </group>
         </section>
     </system>
 </config>

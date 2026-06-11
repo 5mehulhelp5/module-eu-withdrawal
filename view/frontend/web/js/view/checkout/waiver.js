@@ -91,6 +91,20 @@ define([
         saveAndProceed: function () {
             if (!this.canProceed()) { return; }
             var self = this;
+            // The hash is jurisdiction-bound and the address commit races with
+            // step entry — fetch the freshest context and post its hashes in
+            // one go instead of trusting the copy cached at navigation time.
+            $.getJSON(this.contextUrl)
+                .done(function (resp) {
+                    self.items(resp.items || []);
+                    self.postConsent();
+                })
+                .fail(function () {
+                    alert({ content: $t('Waiver could not be saved. Please retry.') });
+                });
+        },
+
+        postConsent: function () {
             var payload = {
                 consent_express: this.consentExpress(),
                 loss_ack: this.lossAck(),

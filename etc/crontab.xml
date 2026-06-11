@@ -17,6 +17,5 @@
              method="execute">
             <schedule>0 * * * *</schedule>
         </job>
-        <!-- audit_log_gc cron moved to MageMe_EUWithdrawalAudit (phase-34). -->
     </group>
 </config>

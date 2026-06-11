@@ -1,3 +1,10 @@
+## 1.0.4
+
+- Fix: The digital-content waiver step no longer fails to save when the billing address is set during checkout.
+* Other: Removed a non-functional Privacy & Retention settings group.
+* Other: Internal cleanup, dead-code removal and a more robust order-lookup rate limiter.
+* Other: Module permissions now appear under the Sales section in admin role permissions (thanks to Ole Schäfer).
+
 ## 1.0.3
 
 - Fix: The refund total now matches the order total when a payment-method discount, gift card or other order-level adjustment applies — such orders previously could not be withdrawn or showed an inflated refund.

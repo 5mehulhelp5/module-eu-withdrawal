@@ -82,7 +82,7 @@ class PeriodRule extends AbstractRule
         EligibilityDecisionInterface $current,
     ): EligibilityDecisionInterface {
         if ($request->getContractType() === ContractType::FINANCIAL) {
-            return $current->withApplied(self::CODE)->withFinalize('financial_out_of_lite_scope');
+            return $current->withApplied(self::CODE)->withFinalize('financial_out_of_scope');
         }
 
         try {

@@ -53,11 +53,11 @@ class OrderPartialStateCalculator
         };
 
         // Only `approved` is terminal from the customer's side — the refund
-        // has been committed and the qty is no longer returnable. `submitted`
+        // has been committed and the qty is no longer returnable. `pending`
         // is admin-visible but not yet decided; the customer can still cancel
-        // it, so it counts as pending.
-        $submittedSel = $baseSelect()->where('r.status = ?', RequestInterface::STATUS_APPROVED);
-        $submittedByOid = $connection->fetchPairs($submittedSel);
+        // it.
+        $approvedSel = $baseSelect()->where('r.status = ?', RequestInterface::STATUS_APPROVED);
+        $approvedByOid = $connection->fetchPairs($approvedSel);
 
         $pendingSel = $baseSelect()->where('r.status = ?', RequestInterface::STATUS_PENDING);
         $pendingByOid = $connection->fetchPairs($pendingSel);
@@ -75,9 +75,9 @@ class OrderPartialStateCalculator
             }
             $oid = (int) $oi->getItemId();
             $purchased = (int) ((float) $oi->getQtyOrdered());
-            $submitted = (int) ($submittedByOid[$oid] ?? 0);
+            $approved = (int) ($approvedByOid[$oid] ?? 0);
             $pending = (int) ($pendingByOid[$oid] ?? 0);
-            $remaining = max(0, $purchased - $submitted - $pending);
+            $remaining = max(0, $purchased - $approved - $pending);
 
             // Ex-tax per-unit price; tax is rendered on its own sidebar row
             // (matches the order-view layout: Subtotal / Shipping / Tax / Total).
@@ -97,7 +97,7 @@ class OrderPartialStateCalculator
             }
 
             if ($eligible && $remaining === 0) {
-                if ($submitted > 0) {
+                if ($approved > 0) {
                     $eligible = false;
                     $basis = 'already_withdrawn';
                 } elseif ($pending > 0) {
@@ -113,7 +113,7 @@ class OrderPartialStateCalculator
                 purchasedQty: $purchased,
                 remainingQty: $remaining,
                 pendingQty: $pending,
-                alreadyWithdrawnQty: $submitted,
+                alreadyWithdrawnQty: $approved,
                 unitDisplayPrice: $unitDisplay,
                 eligibility: $eligible
                     ? RemainingItemState::ELIGIBILITY_ELIGIBLE

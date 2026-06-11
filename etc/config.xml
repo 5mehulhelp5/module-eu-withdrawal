@@ -122,11 +122,6 @@
                     </social>
                 </branding>
             </notifications>
-            <retention>
-                <pii_retention_days>730</pii_retention_days>
-                <hash_retention_days>2190</hash_retention_days>
-            </retention>
-            <!-- audit_log defaults moved to MageMe_EUWithdrawalAudit/etc/config.xml (phase-34). -->
         </mageme_eu_withdrawal>
         <recaptcha_frontend>
             <type_for>

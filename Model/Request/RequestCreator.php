@@ -67,7 +67,7 @@ class RequestCreator
     }
 
     /**
-     * Create a withdrawal request directly in the `submitted` state: the row,
+     * Create a withdrawal request directly in the `pending` state: the row,
      * its items, the frozen receipt snapshot and content hash all land in one
      * transaction. Withdrawal must be as easy as purchase (Art. 2 Directive
      * (EU) 2023/2673), so there is no separate confirmation step.
@@ -131,12 +131,14 @@ class RequestCreator
             $aggregatedReason = $this->aggregateReasons($input->itemReasons, $storeId)
                 ?? $input->reasonText;
 
+            // Rome I Art. 6: consumer's habitual residence at contract time — derive
+            // from the order's billing address, not the browsing store code.
+            $resolvedJurisdiction = $this->resolveJurisdiction($order, $input->jurisdiction);
+
             $connection->insert($this->resource->getTableName(self::TABLE_REQUEST), [
                 RequestInterface::ORDER_ID => (int) $order->getEntityId(),
                 RequestInterface::STORE_ID => $storeId,
-                // Rome I Art. 6: consumer's habitual residence at contract time — derive
-                // from the order's billing address, not the browsing store code.
-                RequestInterface::JURISDICTION => $this->resolveJurisdiction($order, $input->jurisdiction),
+                RequestInterface::JURISDICTION => $resolvedJurisdiction,
                 RequestInterface::CUSTOMER_ID => $input->customerId,
                 RequestInterface::CUSTOMER_EMAIL => $input->customerEmail,
                 RequestInterface::CUSTOMER_NAME => $input->customerName,
@@ -250,7 +252,7 @@ class RequestCreator
                 // value persisted to mm_eu_withdrawal_request.locale above), not the
                 // raw browsing store-view code which can be "default".
                 'locale'        => $resolvedLocale,
-                'jurisdiction'  => $input->jurisdiction,
+                'jurisdiction'  => $resolvedJurisdiction,
                 'referrer_host' => $input->referrerHost,
                 'customer_hash' => hash('sha256', strtolower(trim($input->customerEmail))),
                 'ip'            => $input->ip,
@@ -262,6 +264,7 @@ class RequestCreator
             $this->eventManager->dispatch('mageme_eu_withdrawal_request_create_after', [
                 'eligibility_result' => $result,
                 'request_id'         => $requestId,
+                'content_hash'       => $hash,
                 'order_id'           => (int) $order->getEntityId(),
                 'order_items'        => $order->getItems() ?? [],
                 'submitted_at'       => new \DateTimeImmutable('@' . $ts),

@@ -109,7 +109,7 @@ class OrderEligibilityResolver
         $reason = null;
         if (!$hasCapacity) {
             $mapped = $this->mapIneligibleReason($decision);
-            // Capacity consumed by an existing pending/submitted/approved request
+            // Capacity consumed by an existing pending/approved request
             // surfaces here as no-remaining-qty even though the decision is eligible.
             // That's "already requested", not "Art. 16 excluded / no eligible items".
             if ($existingId !== null && $mapped === PerOrderEligibility::REASON_NO_ELIGIBLE_ITEMS) {

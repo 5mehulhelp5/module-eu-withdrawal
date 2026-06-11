@@ -26,8 +26,6 @@ use Psr\Log\LoggerInterface;
  */
 class OrderWithdrawalHistoryService
 {
-    private const TABLE_REQUEST = 'mm_eu_withdrawal_request';
-    private const TABLE_ITEM    = 'mm_eu_withdrawal_item';
     private const TABLE_ORDER_ITEM = 'sales_order_item';
 
     public const CANCELLABLE_STATUSES = [

@@ -147,9 +147,9 @@ class WaiverEmailRenderer
      */
     private function shortHash(WaiverConfirmationDto $dto): string
     {
-        // Compute the SHA-256 of the legal text the customer accepted from the
-        // snapshot stored on the DTO. Same input → same hash, so this matches
-        // the value stored on the waiver_event row.
+        // Display-only badge: abbreviated SHA-256 of the accepted legal-text
+        // snapshots. Not the stored waiver_text_hash, which also covers
+        // locale + jurisdiction (WaiverTextHasher) — never compare the two.
         $payload = $dto->consentSnapshot . "\n\n---\n\n" . $dto->ackSnapshot;
         $hash = hash('sha256', $payload);
         return substr($hash, 0, 8) . '…' . substr($hash, -5);

@@ -123,8 +123,7 @@ class ReceiptTransport
         }
 
         // The HTML email itself satisfies the durable-medium requirement of
-        // Art. 11a(4) (the customer's inbox preserves it). PDF attachment
-        // lives in the Pro tier (`MageMe_EUWithdrawalPro`).
+        // Art. 11a(4) (the customer's inbox preserves it).
         $this->transportBuilder
             ->setTemplateIdentifier($template)
             ->setTemplateOptions([

@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace MageMe\EUWithdrawal\Controller\Withdraw\Waiver;
 
-use MageMe\EUWithdrawal\Exception\WaiverTextHashMismatchException;
 use MageMe\EUWithdrawal\Model\Waiver\WaiverEventReader;
 use MageMe\EUWithdrawal\Model\Waiver\WaiverEventWriter;
 use MageMe\EUWithdrawal\Model\Waiver\WaiverTextHasher;
@@ -73,9 +72,12 @@ class Save implements HttpPostActionInterface
         foreach ((array) ($body['items'] ?? []) as $item) {
             $providedHash = (string) ($item['waiver_text_hash'] ?? '');
             if (!hash_equals($expectedHash, $providedHash)) {
-                throw new WaiverTextHashMismatchException(
-                    __('Hash mismatch for quote item %1', $item['quote_item_id'] ?? '?')
-                );
+                // The hash is jurisdiction-bound; a concurrent address commit can
+                // outdate the client copy. Signal a retryable conflict, not a 500.
+                return $json->setHttpResponseCode(409)->setData([
+                    'error' => 'hash_mismatch',
+                    'quote_item_id' => (int) ($item['quote_item_id'] ?? 0),
+                ]);
             }
             $quoteItemId = (int) ($item['quote_item_id'] ?? 0);
             if ($quoteItemId <= 0) {

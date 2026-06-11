@@ -1,7 +1,7 @@
 {
   "name": "mageme/module-eu-withdrawal",
   "description": "Magento 2 implementation scaffolding for the EU consumer-withdrawal workflow under Art. 11a Directive 2011/83/EU (as amended by 2023/2673): guided storefront flow (find order, select items, confirm), durable-medium receipt email, 22-locale Annex I content. NOT legal advice — see README disclaimer; merchant is responsible for compliance verification.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "magento2-module",
   "license": "proprietary",
   "keywords": [
@@ -17,6 +17,7 @@
   "authors": [
     {
       "name": "MageMe",
+      "email": "support@mageme.com",
       "homepage": "https://mageme.com",
       "role": "Developer"
     }
@@ -24,10 +25,6 @@
   "require": {
     "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0||~8.5.0",
     "mageme/module-core": "^2.0"
-  },
-  "suggest": {
-    "mageme/module-eu-withdrawal-pro": "Pro tier add-on — advanced rule engine, hash-chain audit, jurisdiction rule packs, evidence-pack export, RMA integrations.",
-    "mageme/module-eu-withdrawal-enterprise": "Enterprise tier add-on — carrier integrations, multi-tenant, digital-service mode, B2B classification."
   },
   "autoload": {
     "files": [

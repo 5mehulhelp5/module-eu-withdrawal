@@ -14,9 +14,6 @@ use MageMe\EUWithdrawal\Model\ResourceModel\Request\CollectionFactory as Request
 
 class RequestLookup
 {
-    public const TABLE_REQUEST = 'mm_eu_withdrawal_request';
-    public const TABLE_ITEM = 'mm_eu_withdrawal_item';
-
     /**
      * Constructor.
      *

@@ -19,7 +19,7 @@ interface StatusMachineInterface
      * @param array{admin_id:string, denial_reason?:string, note?:string, ip?:string, user_agent?:string} $context
      *
      * @throws InvalidTransitionException     Transition from current to $toStatus not permitted
-     * @throws DenialReasonRequiredException  Specific case: submitted→denied without denial_reason ≥ 10 chars
+     * @throws DenialReasonRequiredException  Specific case: pending→denied without denial_reason ≥ 10 chars
      */
     public function transition(RequestInterface $request, string $toStatus, array $context): RequestInterface;
 }

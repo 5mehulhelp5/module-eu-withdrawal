@@ -72,7 +72,7 @@ class MultiplePartialGuard
             ->forUpdate(true);
         $connection->fetchOne($lockSelect);
 
-        // 2) Compute blocked qty per oid across active (submitted/approved) requests.
+        // 2) Compute blocked qty per oid across active (pending/approved) requests.
         $reqTable = $this->resource->getTableName('mm_eu_withdrawal_request');
         $itemTable = $this->resource->getTableName('mm_eu_withdrawal_item');
 
