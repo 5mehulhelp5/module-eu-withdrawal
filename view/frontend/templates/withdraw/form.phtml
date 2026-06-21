@@ -149,6 +149,21 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
 
     <!-- Panel 2: select items (active on load) -->
     <div class="mm-eu-w-panel is-active" data-step="2">
+<?php $blockingReason = $block->getBlockingReason(); ?>
+<?php if ($blockingReason !== null): ?>
+        <div class="mm-eu-w-main">
+            <div class="mm-eu-w-card">
+                <h2 class="mm-eu-w-card-title"><?= $escaper->escapeHtml(__('Withdrawal not available for this order')) ?></h2>
+                <div class="mm-eu-w-banner mm-eu-w-banner--info">
+                    <span class="mm-eu-w-banner-icon" aria-hidden="true"><?= /* @noEscape */ $icon('info', 'mm-eu-w-banner-icon-svg', 20) ?></span>
+                    <span class="mm-eu-w-banner-text"><?= $escaper->escapeHtml(__('This order is not eligible for withdrawal.')) ?></span>
+                </div>
+                <div class="mm-eu-w-action-bar">
+                    <a class="mm-eu-w-link mm-eu-w-link--back" href="<?= $escaper->escapeUrl($indexUrl) ?>">← <?= $escaper->escapeHtml(__('Back to order search')) ?></a>
+                </div>
+            </div>
+        </div>
+<?php else: ?>
         <form class="mm-eu-w-grid" method="post" action="<?= $escaper->escapeUrl($block->getFormAction()) ?>" data-role="step2-form">
             <?= $block->getBlockHtml('formkey') ?>
             <div class="mm-eu-w-main">
@@ -187,6 +202,7 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
                 </div>
             </div>
         </form>
+<?php endif; ?>
     </div>
 
     <!-- Panel 3: review & confirm (hidden until Continue clicked) -->

@@ -56,6 +56,7 @@ It adds only the legal withdrawal step required under Art. 11a, and works alongs
 | **Annex I forensic snapshot** — immutable per-request copy |  —   |                     Yes                     |
 | **Hash-chain audit log** — DB-backed, tamper-evident       |  —   |                     Yes                     |
 | **Magic-link guest access** — one-click tokenised URL      |  —   |                     Yes                     |
+| **Seal-photo evidence** — optional intact-seal photos      |  —   |                     Yes                     |
 
 → **[Compare tiers and pricing](https://mageme.com/magento-2-withdrawal-button-extension.html)**
 

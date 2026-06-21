@@ -11,6 +11,8 @@ use MageMe\EUWithdrawal\Api\Data\Precontract\SnapshotInterface;
 use MageMe\EUWithdrawal\Api\Data\Precontract\SnapshotResolverInterface;
 use MageMe\EUWithdrawal\Model\ModuleConfig;
 use MageMe\EUWithdrawal\Model\Precontract\Exception\MissingMerchantVarsException;
+use MageMe\EUWithdrawal\Model\Scope\WithdrawalScope;
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Locale\ResolverInterface as LocaleResolver;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -36,6 +38,8 @@ class PrecontractInfo extends Template
      * @param StoreManagerInterface $storeManager
      * @param LocaleResolver $localeResolver
      * @param LoggerInterface $logger
+     * @param CheckoutSession $checkoutSession
+     * @param WithdrawalScope $withdrawalScope
      * @param array $data
      */
     public function __construct(
@@ -45,6 +49,8 @@ class PrecontractInfo extends Template
         private readonly StoreManagerInterface $storeManager,
         private readonly LocaleResolver $localeResolver,
         private readonly LoggerInterface $logger,
+        private readonly CheckoutSession $checkoutSession,
+        private readonly WithdrawalScope $withdrawalScope,
         array $data = [],
     ) {
         parent::__construct($context, $data);
@@ -60,13 +66,18 @@ class PrecontractInfo extends Template
         if (!$this->moduleConfig->isEnabled()) {
             return false;
         }
-        return (bool) $this->_scopeConfig->getValue(
+        $displayInCheckout = (bool) $this->_scopeConfig->getValue(
             'mageme_eu_withdrawal/precontract/enabled',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
         ) && (bool) $this->_scopeConfig->getValue(
             'mageme_eu_withdrawal/precontract/display_in_checkout',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
         );
+        if (!$displayInCheckout) {
+            return false;
+        }
+
+        return $this->withdrawalScope->quoteInScope($this->checkoutSession->getQuote());
     }
 
     /**

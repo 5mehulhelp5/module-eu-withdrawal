@@ -12,6 +12,8 @@
             <scope>
                 <country_scope_enabled>0</country_scope_enabled>
                 <country_scope_countries>AT,BE,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IE,IT,LV,LT,LU,MT,NL,PL,PT,RO,SK,SI,ES,SE,NO,IS,LI</country_scope_countries>
+                <customer_group_scope_enabled>0</customer_group_scope_enabled>
+                <customer_group_scope_excluded></customer_group_scope_excluded>
             </scope>
             <precontract>
                 <enabled>1</enabled>
@@ -32,6 +34,8 @@
             <withdrawal_window>
                 <period_days>14</period_days>
                 <delivery_status_code></delivery_status_code>
+                <unconfirmed_delivery_behavior>not_eligible</unconfirmed_delivery_behavior>
+                <excluded_statuses></excluded_statuses>
             </withdrawal_window>
             <digital_waiver>
                 <enabled>0</enabled>

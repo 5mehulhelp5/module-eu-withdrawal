@@ -19,6 +19,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use MageMe\EUWithdrawal\Model\Order\ShipmentExistenceChecker;
 use MageMe\EUWithdrawal\Api\Token\MagicLinkServiceInterface;
 use MageMe\EUWithdrawal\Model\Refund\RefundCalculator;
+use MageMe\EUWithdrawal\Model\Frontend\OrderEligibilityResolver;
 
 class Form extends Template
 {
@@ -42,6 +43,7 @@ class Form extends Template
         private readonly OrderRepositoryInterface $orderRepository,
         private readonly ShipmentExistenceChecker $shipmentChecker,
         private readonly RefundCalculator $refundCalculator,
+        private readonly OrderEligibilityResolver $eligibilityResolver,
         array $data = [],
     ) {
         parent::__construct($context, $data);
@@ -254,6 +256,25 @@ class Form extends Template
             return false;
         }
         return !$this->shipmentChecker->hasShipments((int) $order->getEntityId());
+    }
+
+    /**
+     * Order-level hard-deny reason for the resolved order, or null when it is
+     * withdrawable. Drives the step-2 template to withhold the item form for
+     * orders the engine refuses at order scope (delivered status with no
+     * recorded delivery date, merchant-excluded status, expired, out-of-region/
+     * group) reached directly or via lookup, while still showing the form for
+     * genuine pre-delivery orders.
+     *
+     * @return ?string
+     */
+    public function getBlockingReason(): ?string
+    {
+        $order = $this->resolveOrderForChildren();
+        if ($order === null) {
+            return null;
+        }
+        return $this->eligibilityResolver->orderLevelDenyReason((int) $order->getEntityId());
     }
 
     /**

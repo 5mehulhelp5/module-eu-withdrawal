@@ -105,9 +105,7 @@ class AddOrderCommentOnStatusChange implements ObserverInterface
 
     private function approvedComment(RequestInterface $request, Order $order, string $reference): string
     {
-        $refund = (float) $request->getProRataRefund()
-            + (float) $request->getShippingRefund()
-            + (float) $request->getOrderAdjustmentRefund();
+        $refund = (float) $request->getTotalRefund();
 
         if ($refund > 0.0) {
             $formatted = $this->priceCurrency->format(
@@ -138,8 +136,17 @@ class AddOrderCommentOnStatusChange implements ObserverInterface
     private function cancelledComment(string $reference, array $data): string
     {
         $actor = (string) ($data['admin_id'] ?? '');
-        return $actor === StatusChangeNotifier::ACTOR_CUSTOMER_SELF
-            ? (string) __('EU withdrawal request %1 was cancelled by the customer.', $reference)
-            : (string) __('EU withdrawal request %1 was cancelled by an administrator.', $reference);
+        if ($actor === StatusChangeNotifier::ACTOR_CUSTOMER_SELF) {
+            return (string) __('EU withdrawal request %1 was cancelled by the customer.', $reference);
+        }
+        $note = trim((string) ($data['note'] ?? ''));
+        if ($note !== '') {
+            return (string) __(
+                'EU withdrawal request %1 was cancelled by an administrator. Reason: %2',
+                $reference,
+                $note,
+            );
+        }
+        return (string) __('EU withdrawal request %1 was cancelled by an administrator.', $reference);
     }
 }

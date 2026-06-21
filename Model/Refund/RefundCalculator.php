@@ -124,6 +124,7 @@ class RefundCalculator
             currency: (string) $order->getOrderCurrencyCode(),
             isFullReturn: $isFullReturn,
             orderAdjustmentRefund: $orderAdjustment,
+            shippingTaxRefund: $shippingTax,
         );
     }
 

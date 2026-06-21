@@ -26,7 +26,9 @@
                  type="MageMe\EUWithdrawal\Model\Rule\Chain\RuleChainProcessor">
         <arguments>
             <argument name="rules" xsi:type="array">
+                <item name="status_exclusion_rule" xsi:type="object">MageMe\EUWithdrawal\Model\Rule\StatusExclusionRule</item>
                 <item name="geo_scope_rule" xsi:type="object">MageMe\EUWithdrawal\Model\Rule\GeoScopeRule</item>
+                <item name="customer_group_scope_rule" xsi:type="object">MageMe\EUWithdrawal\Model\Rule\CustomerGroupScopeRule</item>
                 <item name="period_rule" xsi:type="object">MageMe\EUWithdrawal\Model\Rule\PeriodRule</item>
                 <item name="preset_custom" xsi:type="object">MageMe\EUWithdrawal\Model\Rule\Preset\CustomMadePreset</item>
                 <item name="preset_perishable" xsi:type="object">MageMe\EUWithdrawal\Model\Rule\Preset\PerishablePreset</item>

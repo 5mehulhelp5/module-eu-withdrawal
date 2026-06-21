@@ -80,11 +80,7 @@ class PrecontractLayoutPlugin
             // CRD the disclosure must precede the moment the consumer is
             // bound — in Magento that is the Place Order click on the
             // payment step. Showing it earlier (e.g. on shipping step) is
-            // legally redundant and risks duplicate registrations. The
-            // server-side fallback observer (`controller_action_predispatch
-            // _checkout_index_index`) records a display event on every
-            // checkout page-load regardless of step, so forensic chain
-            // covers customers whose browser blocks the JS uiComponent.
+            // legally redundant and risks duplicate registrations.
             $jsLayout['components']['checkout']['children']['steps']['children']
                      ['billing-step']['children']['payment']['children']['mageme_eu_withdrawal_precontract'] = [
                 'component'   => 'MageMe_EUWithdrawal/js/view/checkout/precontract',

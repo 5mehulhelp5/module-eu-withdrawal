@@ -1,3 +1,12 @@
+## 1.0.7
+
++ New: Restrict by Customer Group - optionally hide the self-service withdrawal flow from selected customer groups (e.g. your B2B / wholesale groups), while guests and consumers keep it
++ New: a new "If delivery is never confirmed" setting decides whether orders that reached a delivered status without a recorded delivery date stay open or are treated as not eligible (default)
++ New: Statuses Excluded From Withdrawal - choose order statuses (such as a legacy import status) that should never be offered for withdrawal
++ New: submitting a withdrawal request now adds a note with the requested refund to the related order's timeline
+- Fix: the refund amount shown in the order-timeline notes and the durable-medium receipt now reflects the full amount instead of the shipping portion only
+* Other: the checkout pre-contractual withdrawal information now follows the country and customer-group scope, so it shows only where the self-service withdrawal applies
+
 ## 1.0.6
 
 + New: the withdrawal-CTA order and shipment emails can now be selected directly from the Sales Emails template dropdown - no need to clone a template first

@@ -44,6 +44,14 @@ interface RefundBreakdownInterface
     public function getTaxRefund(): float;
 
     /**
+     * Get the shipping VAT portion baked into getShippingRefund() (the gross
+     * shipping figure). Zero on partial returns and zero-tax shipping.
+     *
+     * @return float
+     */
+    public function getShippingTaxRefund(): float;
+
+    /**
      * Get order adjustment refund (gross, signed). Order-level total not
      * captured in item fields (payment-method discount, gift card, custom
      * total), distributed by return ratio. 0.0 for standard orders.

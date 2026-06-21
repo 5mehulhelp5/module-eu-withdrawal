@@ -294,6 +294,48 @@ class Request extends AbstractModel implements RequestInterface
         return $this;
     }
 
+    /** Get items subtotal. */
+    public function getItemsSubtotal(): ?string
+    {
+        $v = $this->getData(self::ITEMS_SUBTOTAL);
+        return $v === null ? null : (string) $v;
+    }
+
+    /** Set items subtotal. */
+    public function setItemsSubtotal(?string $itemsSubtotal): self
+    {
+        $this->setData(self::ITEMS_SUBTOTAL, $itemsSubtotal);
+        return $this;
+    }
+
+    /** Get tax refund. */
+    public function getTaxRefund(): ?string
+    {
+        $v = $this->getData(self::TAX_REFUND);
+        return $v === null ? null : (string) $v;
+    }
+
+    /** Set tax refund. */
+    public function setTaxRefund(?string $taxRefund): self
+    {
+        $this->setData(self::TAX_REFUND, $taxRefund);
+        return $this;
+    }
+
+    /** Get total refund. */
+    public function getTotalRefund(): ?string
+    {
+        $v = $this->getData(self::TOTAL_REFUND);
+        return $v === null ? null : (string) $v;
+    }
+
+    /** Set total refund. */
+    public function setTotalRefund(?string $totalRefund): self
+    {
+        $this->setData(self::TOTAL_REFUND, $totalRefund);
+        return $this;
+    }
+
     /** Get submitted at. */
     public function getSubmittedAt(): string
     {

@@ -23,6 +23,7 @@ class RefundBreakdown implements RefundBreakdownInterface
         private readonly string $currency,
         private readonly bool $isFullReturn,
         private readonly float $orderAdjustmentRefund = 0.0,
+        private readonly float $shippingTaxRefund = 0.0,
     ) {
     }
 
@@ -64,6 +65,16 @@ class RefundBreakdown implements RefundBreakdownInterface
     public function getTaxRefund(): float
     {
         return $this->taxRefund;
+    }
+
+    /**
+     * Get shipping tax refund.
+     *
+     * @return float
+     */
+    public function getShippingTaxRefund(): float
+    {
+        return $this->shippingTaxRefund;
     }
 
     /**

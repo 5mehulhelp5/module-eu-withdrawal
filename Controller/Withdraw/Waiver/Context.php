@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace MageMe\EUWithdrawal\Controller\Withdraw\Waiver;
 
-use MageMe\EUWithdrawal\Model\Geo\CountryScope;
+use MageMe\EUWithdrawal\Model\Scope\WithdrawalScope;
 use MageMe\EUWithdrawal\Model\Waiver\WaiverTextHasher;
 use MageMe\EUWithdrawal\Model\Waiver\WaiverTextResolver;
 use MageMe\EUWithdrawal\Service\DigitalContentDetector;
@@ -28,7 +28,7 @@ class Context implements HttpGetActionInterface
      * @param WaiverTextHasher $hasher
      * @param StoreManagerInterface $storeManager
      * @param JsonFactory $jsonFactory
-     * @param CountryScope $countryScope
+     * @param WithdrawalScope $withdrawalScope
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -37,7 +37,7 @@ class Context implements HttpGetActionInterface
         private readonly WaiverTextHasher $hasher,
         private readonly StoreManagerInterface $storeManager,
         private readonly JsonFactory $jsonFactory,
-        private readonly CountryScope $countryScope,
+        private readonly WithdrawalScope $withdrawalScope,
     ) {
     }
 
@@ -49,7 +49,7 @@ class Context implements HttpGetActionInterface
     public function execute(): ResultInterface
     {
         $quote = $this->checkoutSession->getQuote();
-        if (!$this->countryScope->quoteInScope($quote)) {
+        if (!$this->withdrawalScope->quoteInScope($quote)) {
             return $this->jsonFactory->create()->setData([
                 'items' => [],
                 'locale' => null,

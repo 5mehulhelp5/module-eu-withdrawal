@@ -15,6 +15,9 @@ class PerOrderEligibility
     public const REASON_NO_ELIGIBLE_ITEMS   = 'no_eligible_items';
     public const REASON_NOT_SHIPPED_YET     = 'not_shipped_yet';
     public const REASON_OUT_OF_REGION       = 'out_of_region';
+    public const REASON_OUT_OF_GROUP        = 'out_of_group';
+    public const REASON_DELIVERY_DATE_UNRECORDED = 'delivery_date_unrecorded';
+    public const REASON_STATUS_EXCLUDED = 'status_excluded';
 
     /**
      * Constructor.

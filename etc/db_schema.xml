@@ -24,6 +24,9 @@
         <column xsi:type="decimal" name="pro_rata_refund" scale="4" precision="12" nullable="true" comment="For digital_service (Art. 14(4)(a))"/>
         <column xsi:type="decimal" name="shipping_refund" scale="4" precision="12" nullable="true" comment="Delivery cost refunded on full withdrawal (Art. 13(2) CRD). Null for partial/historic rows."/>
         <column xsi:type="decimal" name="order_adjustment_refund" scale="4" precision="12" nullable="true" comment="Order-level refund component (gross, signed) for totals not captured in item fields — payment-method discounts, gift cards, custom totals. Distributed by return ratio at consent time. Null when zero."/>
+        <column xsi:type="decimal" name="items_subtotal" scale="4" precision="12" nullable="true" comment="Net items refund (subtotal of withdrawn lines excl. VAT), frozen at consent time. Null on legacy rows until backfilled."/>
+        <column xsi:type="decimal" name="tax_refund" scale="4" precision="12" nullable="true" comment="Combined VAT refund (items VAT + shipping VAT), frozen at consent time. Null on legacy rows until backfilled."/>
+        <column xsi:type="decimal" name="total_refund" scale="4" precision="12" nullable="true" comment="Frozen canonical refund total computed by RefundCalculator at consent time: net items + all refunded VAT + delivery cost + order-level adjustments. Read by the admin grid, edit screen, order comment and receipt; not a plain sum of the split columns, since shipping VAT is counted in both tax_refund and shipping_refund. Null on legacy rows until backfilled."/>
         <column xsi:type="timestamp" name="submitted_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Art. 11a(4) timestamp (UTC)"/>
         <column xsi:type="timestamp" name="confirmed_at" nullable="true" comment="When step 2 activated"/>
         <column xsi:type="timestamp" name="acknowledged_at" nullable="true" comment="Durable medium sent"/>

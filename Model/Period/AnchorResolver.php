@@ -98,6 +98,19 @@ class AnchorResolver
         }
     }
 
+    public function isConfiguredDeliveryStatus(string $status, int $storeId): bool
+    {
+        if ($status === '') {
+            return false;
+        }
+        $statuses = $this->parseStatuses((string) $this->scopeConfig->getValue(
+            self::XML_DELIVERY_STATUS_CODE,
+            ScopeInterface::SCOPE_STORE,
+            $storeId,
+        ));
+        return in_array($status, $statuses, true);
+    }
+
     /**
      * Multiselect persists the value as a comma-separated string. Trim, split
      * on commas, drop empties.

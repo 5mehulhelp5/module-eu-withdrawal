@@ -39,9 +39,10 @@ class NoOpMagicLinkService implements MagicLinkServiceInterface
      * Issue or reuse for order.
      *
      * @param int $orderEntityId
+     * @param ?int $storeId
      * @return string Always empty string — The base module has no token issuer.
      */
-    public function issueOrReuseForOrder(int $orderEntityId): string
+    public function issueOrReuseForOrder(int $orderEntityId, ?int $storeId = null): string
     {
         return '';
     }

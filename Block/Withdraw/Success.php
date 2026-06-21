@@ -288,7 +288,10 @@ class Success extends Template
      */
     public function getTotalRefund(): float
     {
-        return $this->getItemsSubtotal() + $this->getShippingRefund() + $this->getOrderAdjustmentRefund();
+        $stored = $this->getWithdrawalRequest()?->getTotalRefund();
+        return $stored !== null
+            ? (float) $stored
+            : $this->getItemsSubtotal() + $this->getShippingRefund() + $this->getOrderAdjustmentRefund();
     }
 
     /**

@@ -15,7 +15,10 @@ use MageMe\EUWithdrawal\Model\EligibilityRequestBuilder;
 use MageMe\EUWithdrawal\Model\Frontend\Dto\PerOrderEligibility;
 use MageMe\EUWithdrawal\Model\Item\OrderPartialStateCalculator;
 use MageMe\EUWithdrawal\Model\Item\RemainingItemState;
+use MageMe\EUWithdrawal\Model\Rule\CustomerGroupScopeRule;
 use MageMe\EUWithdrawal\Model\Rule\GeoScopeRule;
+use MageMe\EUWithdrawal\Model\Rule\PeriodRule;
+use MageMe\EUWithdrawal\Model\Rule\StatusExclusionRule;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -69,6 +72,25 @@ class OrderEligibilityResolver
     public function isEligibleForOrder(OrderInterface $order): bool
     {
         return $this->resolve((int) $order->getEntityId())->eligible;
+    }
+
+    /**
+     * Order-level hard-deny reason (final, not eligible) for the order, or null
+     * when it is withdrawable or only capacity-limited. Lets the withdraw form
+     * withhold step 2 for orders the engine refuses at order scope while still
+     * allowing genuine pre-delivery orders through.
+     *
+     * @param int $orderId
+     * @return ?string
+     */
+    public function orderLevelDenyReason(int $orderId): ?string
+    {
+        $order = $this->orderRepository->get($orderId);
+        $decision = $this->engine->evaluate($this->requestBuilder->build($order))->getOrderDecision();
+        if ($decision->isFinal() && !$decision->isEligible()) {
+            return $this->mapIneligibleReason($decision);
+        }
+        return null;
     }
 
     /**
@@ -189,15 +211,25 @@ class OrderEligibilityResolver
         // Period-related reasons (period_expired / not_shipped_yet) set exclusionBasis='Art. 9(2)',
         // so they must be matched before the generic exclusionBasis check;
         // Model/Rule/Preset/*Preset.php emit 'art_16_*' reasons with 'Art. 16(*)' basis strings.
-        // Geo-scope denials also carry a basis ('merchant_geo_scope') and must match on reason first.
+        // Geo-scope and customer-group-scope denials also carry a basis
+        // ('merchant_geo_scope' / 'merchant_group_scope') and must match on reason first.
+        if ($decision->getReason() === PeriodRule::REASON_DELIVERY_DATE_UNRECORDED) {
+            return PerOrderEligibility::REASON_DELIVERY_DATE_UNRECORDED;
+        }
         if ($decision->getReason() === GeoScopeRule::REASON) {
             return PerOrderEligibility::REASON_OUT_OF_REGION;
+        }
+        if ($decision->getReason() === CustomerGroupScopeRule::REASON) {
+            return PerOrderEligibility::REASON_OUT_OF_GROUP;
         }
         if ($decision->getReason() === 'period_expired') {
             return PerOrderEligibility::REASON_PERIOD_EXPIRED;
         }
         if ($decision->getReason() === 'not_shipped_yet') {
             return PerOrderEligibility::REASON_NOT_SHIPPED_YET;
+        }
+        if ($decision->getReason() === StatusExclusionRule::REASON_EXCLUDED) {
+            return PerOrderEligibility::REASON_STATUS_EXCLUDED;
         }
         if ($decision->getExclusionBasis() !== null) {
             return PerOrderEligibility::REASON_ART_16_EXCLUDED;

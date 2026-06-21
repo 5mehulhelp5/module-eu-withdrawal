@@ -260,9 +260,11 @@ class General extends Template implements TabInterface
      */
     public function getRefundTotal(): string
     {
-        return $this->formatPrice(
-            $this->getItemsSubtotal() + $this->getShippingRefund() + $this->getOrderAdjustmentRefund(),
-        );
+        $stored = $this->getRequestEntity()?->getTotalRefund();
+        $total = $stored !== null
+            ? (float) $stored
+            : $this->getItemsSubtotal() + $this->getShippingRefund() + $this->getOrderAdjustmentRefund();
+        return $this->formatPrice($total);
     }
 
     /**

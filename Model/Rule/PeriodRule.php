@@ -13,6 +13,7 @@ use MageMe\EUWithdrawal\Api\RuleInterface;
 use MageMe\EUWithdrawal\Exception\InvalidConfigurationException;
 use MageMe\EUWithdrawal\Exception\NoDeliveryInfoException;
 use MageMe\EUWithdrawal\Model\Config\Source\ContractType;
+use MageMe\EUWithdrawal\Model\Config\Source\UnconfirmedDeliveryBehavior;
 use MageMe\EUWithdrawal\Api\Period\Art10ExtensionCheckerInterface;
 use MageMe\EUWithdrawal\Model\Period\AnchorResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -25,6 +26,9 @@ class PeriodRule extends AbstractRule
     public const WITHDRAWAL_DAYS = 14;
     public const ART10_EXTENSION_MONTHS = 12;
     public const XML_PERIOD_DAYS = 'mageme_eu_withdrawal/withdrawal_window/period_days';
+    public const REASON_DELIVERY_DATE_UNRECORDED = 'delivery_date_unrecorded';
+    public const BASIS_NO_DELIVERY_DATE = 'no_delivery_date';
+    public const XML_UNCONFIRMED_BEHAVIOR = 'mageme_eu_withdrawal/withdrawal_window/unconfirmed_delivery_behavior';
 
     /**
      * Constructor.
@@ -91,11 +95,10 @@ class PeriodRule extends AbstractRule
                 $request->getStoreId(),
             );
         } catch (NoDeliveryInfoException) {
-            // Per Art. 9(1) CRD, the right to withdraw arises at contract
-            // conclusion; the 14-day countdown only starts at delivery for
-            // goods (Art. 9(2)(b)). Pre-delivery is a valid open-period
-            // state: decision stays eligible, periodEnd stays unset, DB
-            // persists period_end_at = NULL.
+            if ($this->isUnrecordedDeliveredOrder($request)) {
+                return $current->withApplied(self::CODE)
+                    ->withDeny(self::REASON_DELIVERY_DATE_UNRECORDED, self::BASIS_NO_DELIVERY_DATE);
+            }
             return $current->withApplied(self::CODE);
         } catch (InvalidConfigurationException) {
             // Merchant has not yet picked a delivery-confirmation status.
@@ -127,5 +130,21 @@ class PeriodRule extends AbstractRule
         }
 
         return $decision;
+    }
+
+    private function isUnrecordedDeliveredOrder(EligibilityRequestInterface $request): bool
+    {
+        $behavior = (string) $this->scopeConfig->getValue(
+            self::XML_UNCONFIRMED_BEHAVIOR,
+            ScopeInterface::SCOPE_STORE,
+            $request->getStoreId(),
+        );
+        if ($behavior === UnconfirmedDeliveryBehavior::KEEP_OPEN) {
+            return false;
+        }
+        return $this->anchorResolver->isConfiguredDeliveryStatus(
+            (string) $request->getOrder()->getStatus(),
+            $request->getStoreId(),
+        );
     }
 }

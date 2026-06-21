@@ -140,6 +140,10 @@ class RequestCreator
             // from the order's billing address, not the browsing store code.
             $resolvedJurisdiction = $this->resolveJurisdiction($order, $input->jurisdiction);
 
+            // Combined VAT (item + shipping) and the canonical frozen total —
+            // read-once figures so no consumer recomputes the refund sum.
+            $combinedTaxRefund = $breakdown->getTaxRefund() + $breakdown->getShippingTaxRefund();
+
             $connection->insert($this->resource->getTableName(self::TABLE_REQUEST), [
                 RequestInterface::ORDER_ID => (int) $order->getEntityId(),
                 RequestInterface::STORE_ID => $storeId,
@@ -165,6 +169,9 @@ class RequestCreator
                 RequestInterface::ORDER_ADJUSTMENT_REFUND => $breakdown->getOrderAdjustmentRefund() !== 0.0
                     ? $breakdown->getOrderAdjustmentRefund()
                     : null,
+                RequestInterface::ITEMS_SUBTOTAL => $breakdown->getItemsSubtotal() > 0 ? $breakdown->getItemsSubtotal() : null,
+                RequestInterface::TAX_REFUND => $combinedTaxRefund > 0 ? $combinedTaxRefund : null,
+                RequestInterface::TOTAL_REFUND => $breakdown->getTotal(),
                 RequestInterface::SUBMITTED_AT => $now,
                 RequestInterface::CONFIRMED_AT => $now,
             ]);

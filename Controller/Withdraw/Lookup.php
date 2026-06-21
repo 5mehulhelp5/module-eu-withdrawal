@@ -8,7 +8,7 @@ declare(strict_types=1);
 namespace MageMe\EUWithdrawal\Controller\Withdraw;
 
 use MageMe\EUWithdrawal\Api\Token\MagicLinkServiceInterface;
-use MageMe\EUWithdrawal\Model\Geo\CountryScope;
+use MageMe\EUWithdrawal\Model\Scope\WithdrawalScope;
 use MageMe\EUWithdrawal\Model\Lookup\OrderLookupByIncrementId;
 use MageMe\EUWithdrawal\Model\Security\ResponseTimer;
 use MageMe\EUWithdrawal\Model\Session as WithdrawalSession;
@@ -38,7 +38,7 @@ class Lookup implements HttpPostActionInterface
      * @param ResponseTimer $responseTimer
      * @param MagicLinkServiceInterface $magicLinkService
      * @param WithdrawalSession $withdrawalSession
-     * @param CountryScope $countryScope
+     * @param WithdrawalScope $withdrawalScope
      * @param ManagerInterface $messageManager
      */
     public function __construct(
@@ -48,7 +48,7 @@ class Lookup implements HttpPostActionInterface
         private readonly ResponseTimer $responseTimer,
         private readonly MagicLinkServiceInterface $magicLinkService,
         private readonly WithdrawalSession $withdrawalSession,
-        private readonly CountryScope $countryScope,
+        private readonly WithdrawalScope $withdrawalScope,
         private readonly ManagerInterface $messageManager,
     ) {
     }
@@ -78,7 +78,7 @@ class Lookup implements HttpPostActionInterface
         $this->responseTimer->pad(200);
 
         if ($matches) {
-            if (!$this->countryScope->orderInScope($order)) {
+            if (!$this->withdrawalScope->orderInScope($order)) {
                 $this->messageManager->addErrorMessage(
                     __('Self-service withdrawal is not available for this order.')
                 );

@@ -50,7 +50,8 @@ interface MagicLinkServiceInterface
      * session-only verification".
      *
      * @param int $orderEntityId
+     * @param ?int $storeId Store-view scope for the configurable token lifetime; null = current/ambient scope.
      * @return string Plain token (hex), or empty string in the base module.
      */
-    public function issueOrReuseForOrder(int $orderEntityId): string;
+    public function issueOrReuseForOrder(int $orderEntityId, ?int $storeId = null): string;
 }

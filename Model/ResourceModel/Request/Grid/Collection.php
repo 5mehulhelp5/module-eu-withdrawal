@@ -39,16 +39,10 @@ class Collection extends SearchResult
                     '(SELECT COUNT(*) FROM ' . $itemTable . ' i
                       WHERE i.request_id = main_table.request_id)'
                 ),
-                // Full refund shown in the grid = items subtotal + the frozen
-                // Art. 13(2) delivery refund + the frozen order-level adjustment
-                // stored on the request (both NULL on standard/partial rows),
-                // matching the Refund Totals on the edit screen.
-                'items_refund_total' => new \Zend_Db_Expr(
-                    '(SELECT COALESCE(SUM(i.refund_amount), 0) FROM ' . $itemTable . ' i
-                      WHERE i.request_id = main_table.request_id)
-                      + COALESCE(main_table.shipping_refund, 0)
-                      + COALESCE(main_table.order_adjustment_refund, 0)'
-                ),
+                // Full refund shown in the grid = the frozen total_refund stored on
+                // the request at consent time (items + shipping + order adjustment),
+                // matching the Refund Totals on the edit screen and the order comment.
+                'items_refund_total' => new \Zend_Db_Expr('COALESCE(main_table.total_refund, 0)'),
             ]);
 
         return $this;

@@ -42,6 +42,9 @@ interface RequestInterface
     public const PRO_RATA_REFUND          = 'pro_rata_refund';
     public const SHIPPING_REFUND          = 'shipping_refund';
     public const ORDER_ADJUSTMENT_REFUND  = 'order_adjustment_refund';
+    public const ITEMS_SUBTOTAL           = 'items_subtotal';
+    public const TAX_REFUND               = 'tax_refund';
+    public const TOTAL_REFUND             = 'total_refund';
     public const SUBMITTED_AT             = 'submitted_at';
     public const CONFIRMED_AT             = 'confirmed_at';
     public const ACKNOWLEDGED_AT          = 'acknowledged_at';
@@ -177,6 +180,24 @@ interface RequestInterface
 
     /** Set order adjustment refund. */
     public function setOrderAdjustmentRefund(?string $orderAdjustmentRefund): self;
+
+    /** Get items subtotal (net items refund), frozen at consent time. */
+    public function getItemsSubtotal(): ?string;
+
+    /** Set items subtotal. */
+    public function setItemsSubtotal(?string $itemsSubtotal): self;
+
+    /** Get tax refund (combined items + shipping VAT), frozen at consent time. */
+    public function getTaxRefund(): ?string;
+
+    /** Set tax refund. */
+    public function setTaxRefund(?string $taxRefund): self;
+
+    /** Get total refund, frozen at consent time. */
+    public function getTotalRefund(): ?string;
+
+    /** Set total refund. */
+    public function setTotalRefund(?string $totalRefund): self;
 
     /** Get submitted at. */
     public function getSubmittedAt(): string;

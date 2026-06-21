@@ -36,7 +36,10 @@
             "increment_id": true,
             "shipping_refund": true,
             "refund_creditmemo_id": true,
-            "order_adjustment_refund": true
+            "order_adjustment_refund": true,
+            "items_subtotal": true,
+            "tax_refund": true,
+            "total_refund": true
         },
         "index": {
             "MM_EU_WITHDRAWAL_REQUEST_ORDER_ID": true,
