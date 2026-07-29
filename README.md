@@ -15,7 +15,7 @@ The Magento 2 withdrawal button your EU storefront needs — a storefront-ready,
 
 It adds only the legal withdrawal step required under Art. 11a, and works alongside your existing RMA / refund process rather than replacing it.
 
-**[Live demo](https://eu-withdrawal.demo.mageme.com/)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
+**[Live demo — try the guest flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
 
 ![Withdrawal button on the order page — shown automatically once the order is delivered](https://mageme.com/media/extensions/eu-withdrawal/order-view.png)
 
@@ -36,14 +36,16 @@ It adds only the legal withdrawal step required under Art. 11a, and works alongs
 
 ## Live demo
 
-Try the full flow on the [demo store](https://eu-withdrawal.demo.mageme.com/) — the demo menu on the right guides you through every scenario:
+Start with the [guest withdrawal flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest): find an order by order number and email, select items, and submit the request.
 
-- [Find an order as a guest](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest) — lookup by order number and email
-- [Sealed item — seal check & photos](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-seal) — Art. 16(e) question in the wizard
-- [Return a product bundle](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-bundle)
-- [Magic link — no login needed](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/magic)
-- [Hyvä storefront](https://eu-withdrawal.demo.mageme.com/?___store=hyva)
-- [Admin panel](https://eu-withdrawal.demo.mageme.com/admin) — request grid, auto-approval rules, audit trail (logs in automatically)
+- [Registered-customer flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/withdrawable) — opens a demo account and starts from the customer's order page
+- [Admin workflow](https://eu-withdrawal.demo.mageme.com/admin) — review requests, apply auto-approval rules, and inspect the audit trail (logs in automatically)
+- [Hyvä storefront](https://eu-withdrawal.demo.mageme.com/?___store=hyva) — the same flow on the Hyvä-compatible frontend
+- [Sealed-item exception](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-seal) — answer the Art. 16(e) seal question and attach photos
+- [Bundle withdrawal](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-bundle) — item selection and eligibility for a product bundle
+- [Email magic-link access](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/magic) — open the flow from an emailed one-time link, without signing in
+
+[Browse all demo scenarios](https://eu-withdrawal.demo.mageme.com/) using the demo menu on the right.
 
 ## Screenshots
 
