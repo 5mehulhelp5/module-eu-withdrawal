@@ -15,7 +15,7 @@ The Magento 2 withdrawal button your EU storefront needs — a storefront-ready,
 
 It adds only the legal withdrawal step required under Art. 11a, and works alongside your existing RMA / refund process rather than replacing it.
 
-**[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
+**[Live demo](https://eu-withdrawal.demo.mageme.com/)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
 
 ![Withdrawal button on the order page — shown automatically once the order is delivered](https://mageme.com/media/extensions/eu-withdrawal/order-view.png)
 
@@ -33,6 +33,17 @@ It adds only the legal withdrawal step required under Art. 11a, and works alongs
 - **Pro-rata refund calculation** — Art. 13(2)/14(2) totals (with order-level adjustments) shown in the admin and added to the order timeline; calculation only — it does not replace Magento's credit-memo / refund processing
 - **Reimbursement tracking** — each approved request tracks its 14-day refund deadline (Art. 13(3)) with a due / withheld / overdue / refunded state and a credit-memo link, a daily overdue digest emailed to admins, the option to withhold a refund until the goods come back and resume it later, and a "mark refund as paid" action for refunds issued outside Magento (bank transfer or elsewhere) — after which no second refund can be raised
 - **Admin grid and workflow** — filterable request list, status changes (approve / deny / cancel), order-timeline notes, column controls, and CSV export
+
+## Live demo
+
+Try the full flow on the [demo store](https://eu-withdrawal.demo.mageme.com/) — the demo menu on the right guides you through every scenario:
+
+- [Find an order as a guest](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest) — lookup by order number and email
+- [Sealed item — seal check & photos](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-seal) — Art. 16(e) question in the wizard
+- [Return a product bundle](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-bundle)
+- [Magic link — no login needed](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/magic)
+- [Hyvä storefront](https://eu-withdrawal.demo.mageme.com/?___store=hyva)
+- [Admin panel](https://eu-withdrawal.demo.mageme.com/admin) — request grid, auto-approval rules, audit trail (logs in automatically)
 
 ## Screenshots
 
