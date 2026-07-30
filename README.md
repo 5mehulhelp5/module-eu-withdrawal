@@ -15,7 +15,7 @@ The Magento 2 withdrawal button your EU storefront needs — a storefront-ready,
 
 It adds only the legal withdrawal step required under Art. 11a, and works alongside your existing RMA / refund process rather than replacing it.
 
-**[Live demo — try the guest flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=hero)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
+**[Live demo — try the guest flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=hero)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html?utm_source=github&utm_medium=readme&utm_campaign=euw-pro&utm_content=hero)**
 
 ![Withdrawal button on the order page — shown automatically once the order is delivered](https://mageme.com/media/extensions/eu-withdrawal/order-view.png)
 
@@ -57,13 +57,13 @@ Start with the [guest withdrawal flow](https://eu-withdrawal.demo.mageme.com/dem
 
 ![Admin withdrawal requests grid](https://mageme.com/media/extensions/eu-withdrawal/admin-grid.png)
 
-**Durable-medium receipt email** — the confirmation sent to the consumer with a frozen snapshot of the legal text they accepted. *(The SHA-256 integrity-hash card and one-click verification shown here are a [Pro](https://mageme.com/magento-2-withdrawal-button-extension.html) add-on.)*
+**Durable-medium receipt email** — the confirmation sent to the consumer with a frozen snapshot of the legal text they accepted. *(The SHA-256 integrity-hash card and one-click verification shown here are a [Pro](https://mageme.com/magento-2-withdrawal-button-extension.html?utm_source=github&utm_medium=readme&utm_campaign=euw-pro&utm_content=receipt-note) add-on.)*
 
 ![Durable-medium withdrawal receipt email; the SHA-256 integrity-hash card shown is a Pro add-on](https://mageme.com/media/extensions/eu-withdrawal/receipt-email.png)
 
 ## Free vs Pro
 
-| Feature                                                    | Free | [Pro](https://mageme.com/magento-2-withdrawal-button-extension.html) |
+| Feature                                                    | Free | [Pro](https://mageme.com/magento-2-withdrawal-button-extension.html?utm_source=github&utm_medium=readme&utm_campaign=euw-pro&utm_content=table-header) |
 |------------------------------------------------------------|:----:|:-------------------------------------------:|
 | Storefront withdrawal flow                                 | Yes  |                     Yes                     |
 | Annex I — 22 EU locales                                    | Yes  |                     Yes                     |
@@ -84,7 +84,7 @@ Start with the [guest withdrawal flow](https://eu-withdrawal.demo.mageme.com/dem
 | **Seal-photo evidence** — optional intact-seal photos      |  —   |                     Yes                     |
 | **Auto-approval engine** — rule-based auto-approve + memo  |  —   |                     Yes                     |
 
-→ **[Compare tiers and pricing](https://mageme.com/magento-2-withdrawal-button-extension.html)**
+→ **[Compare tiers and pricing](https://mageme.com/magento-2-withdrawal-button-extension.html?utm_source=github&utm_medium=readme&utm_campaign=euw-pro&utm_content=pricing-cta)**
 
 ## Install
 
