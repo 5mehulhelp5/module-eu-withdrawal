@@ -15,7 +15,7 @@ The Magento 2 withdrawal button your EU storefront needs — a storefront-ready,
 
 It adds only the legal withdrawal step required under Art. 11a, and works alongside your existing RMA / refund process rather than replacing it.
 
-**[Live demo — try the guest flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
+**[Live demo — try the guest flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=hero)** · **[Documentation](https://docs.mageme.com)** · **[Get Pro features](https://mageme.com/magento-2-withdrawal-button-extension.html)**
 
 ![Withdrawal button on the order page — shown automatically once the order is delivered](https://mageme.com/media/extensions/eu-withdrawal/order-view.png)
 
@@ -36,16 +36,16 @@ It adds only the legal withdrawal step required under Art. 11a, and works alongs
 
 ## Live demo
 
-Start with the [guest withdrawal flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest): find an order by order number and email, select items, and submit the request.
+Start with the [guest withdrawal flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=demo-intro): find an order by order number and email, select items, and submit the request.
 
-- [Registered-customer flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/withdrawable) — opens a demo account and starts from the customer's order page
-- [Admin workflow](https://eu-withdrawal.demo.mageme.com/admin) — review requests, apply auto-approval rules, and inspect the audit trail (logs in automatically)
-- [Hyvä storefront](https://eu-withdrawal.demo.mageme.com/?___store=hyva) — the same flow on the Hyvä-compatible frontend
-- [Sealed-item exception](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-seal) — answer the Art. 16(e) seal question and attach photos
-- [Bundle withdrawal](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-bundle) — item selection and eligibility for a product bundle
-- [Email magic-link access](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/magic) — open the flow from an emailed one-time link, without signing in
+- [Registered-customer flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/withdrawable?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-customer) — opens a demo account and starts from the customer's order page
+- [Admin workflow](https://eu-withdrawal.demo.mageme.com/admin?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-admin) — review requests, apply auto-approval rules, and inspect the audit trail (logs in automatically)
+- [Hyvä storefront](https://eu-withdrawal.demo.mageme.com/?___store=hyva&utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-hyva) — the same flow on the Hyvä-compatible frontend
+- [Sealed-item exception](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-seal?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-seal) — answer the Art. 16(e) seal question and attach photos
+- [Bundle withdrawal](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-bundle?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-bundle) — item selection and eligibility for a product bundle
+- [Email magic-link access](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/magic?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-magic) — open the flow from an emailed one-time link, without signing in
 
-[Browse all demo scenarios](https://eu-withdrawal.demo.mageme.com/) using the demo menu on the right.
+[Browse all demo scenarios](https://eu-withdrawal.demo.mageme.com/?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=browse-all) using the demo menu on the right.
 
 ## Screenshots
 
