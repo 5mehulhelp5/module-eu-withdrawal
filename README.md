@@ -38,12 +38,25 @@ It adds only the legal withdrawal step required under Art. 11a, and works alongs
 
 Start with the [guest withdrawal flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/guest?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=demo-intro): find an order by order number and email, select items, and submit the request.
 
+**Storefront**
+
 - [Registered-customer flow](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/withdrawable?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-customer) — opens a demo account and starts from the customer's order page
-- [Admin workflow](https://eu-withdrawal.demo.mageme.com/admin?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-admin) — review requests, apply auto-approval rules, and inspect the audit trail (logs in automatically)
-- [Hyvä storefront](https://eu-withdrawal.demo.mageme.com/?___store=hyva&utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-hyva) — the same flow on the Hyvä-compatible frontend
 - [Sealed-item exception](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-seal?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-seal) — answer the Art. 16(e) seal question and attach photos
 - [Bundle withdrawal](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/try-bundle?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-bundle) — item selection and eligibility for a product bundle
 - [Email magic-link access](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/magic?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-magic) — open the flow from an emailed one-time link, without signing in
+- [Completed request, customer view](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/account?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-completed) — an approved and refunded withdrawal as the consumer sees it
+
+**Admin** — opens signed in, no credentials needed
+
+- [Request card](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/admin-r2?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-admin-request) — the same request from the merchant side: refund totals, evidence, and status actions
+- [All withdrawal requests](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/admin-grid?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-admin) — filterable grid with the status workflow and CSV export
+- [Auto-approval rules](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/admin-rules?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-autoapprove) and [decision history](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/admin-decisions?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-decisions) — which rule fired on which request (Pro)
+- [Audit trail](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/admin-raudit?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-audit) — the tamper-evident hash-chain log of one request (Pro)
+
+**Proof**
+
+- [Verify a submission receipt](https://eu-withdrawal.demo.mageme.com/demo/open/go/alias/verify?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=scenario-verify) — re-check a receipt's SHA-256 hash against the stored snapshot (Pro)
+- [Demo mailbox](https://euw-mail.demo.mageme.com/) — durable-medium receipts and magic links exactly as customers receive them
 
 [Browse all demo scenarios](https://eu-withdrawal.demo.mageme.com/?utm_source=github&utm_medium=readme&utm_campaign=euw-demo&utm_content=browse-all) using the demo menu on the right.
 
