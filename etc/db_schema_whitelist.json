@@ -43,7 +43,12 @@
             "reimbursement_deadline": true,
             "reimbursement_withheld_at": true,
             "reimbursement_last_alerted_at": true,
-            "reimbursement_paid_at": true
+            "reimbursement_paid_at": true,
+            "refund_issue_claimed_at": true,
+            "refund_lease_until": true,
+            "refund_lease_holder": true,
+            "refund_lease_token": true,
+            "refund_outcome_unknown_at": true
         },
         "index": {
             "MM_EU_WITHDRAWAL_REQUEST_ORDER_ID": true,
@@ -167,6 +172,18 @@
         "index": {
             "IDX_MM_EU_WITHDRAWAL_REQUEST_NOTE_REQUEST_ID": true,
             "MM_EU_WITHDRAWAL_REQUEST_NOTE_REQUEST_ID": true
+        }
+    },
+    "mm_eu_withdrawal_delivery_anchor": {
+        "column": {
+            "order_id": true,
+            "status": true,
+            "reached_at": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "MM_EU_WITHDRAWAL_DELIVERY_ANCHOR_ORDER_ID_SALES_ORDER_ENTITY_ID": true
         }
     }
 }

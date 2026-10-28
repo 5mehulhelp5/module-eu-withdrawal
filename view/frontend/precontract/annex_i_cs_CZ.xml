@@ -10,7 +10,7 @@
     <annex_ia>
         <section id="right_of_withdrawal">Do {period_days} dnů máte právo odstoupit od této smlouvy bez udání důvodu.</section>
         <section id="period_start">Lhůta pro odstoupení od smlouvy uplyne {period_days} dnů ode dne následujícího po dnu, kdy Vy nebo Vámi určená třetí strana (jiná než dopravce) získáte zboží do fyzického držení. U digitálního obsahu poskytnutého bez hmotného nosiče lhůta uplyne 14 dnů po uzavření smlouvy (pokud jste se tohoto práva výslovně nevzdal(a) při placení).</section>
-        <section id="how_to_exercise">Pro účely uplatnění práva odstoupit od smlouvy nás — {merchant_name}, {merchant_address}, {merchant_phone}, {merchant_email} — musíte o svém rozhodnutí odstoupit od této smlouvy informovat formou jednoznačného prohlášení (např. dopisu zaslaného poštou, faxu nebo e-mailu). Můžete použít vzorový formulář pro odstoupení od smlouvy uvedený níže, není to však Vaší povinností.</section>
+        <section id="how_to_exercise">Pro účely uplatnění práva odstoupit od smlouvy nás — {merchant_name}, {merchant_address}, {merchant_phone}, {merchant_email} — musíte o svém rozhodnutí odstoupit od této smlouvy informovat formou jednoznačného prohlášení (například dopisu zaslaného poštou nebo e-mailu). Můžete použít vzorový formulář pro odstoupení od smlouvy uvedený níže, není to však Vaší povinností. Můžete rovněž uplatnit své právo odstoupit od smlouvy online na {withdrawal_function_url}. Pokud tento internetový prvek použijete, zašleme Vám na trvalém nosiči (například e-mailem) potvrzení o přijetí odstoupení od smlouvy, včetně jeho obsahu a data a času jeho odeslání, a to bez zbytečného odkladu.</section>
         <section id="effects">Pokud odstoupíte od této smlouvy, vrátíme Vám bez zbytečných prodlev a v každém případě nejpozději do 14 dnů ode dne, kdy jsme byli informováni o Vašem rozhodnutí odstoupit od smlouvy, všechny platby, které jsme od Vás obdrželi, včetně nákladů na standardní dodání (kromě dodatečných nákladů vzniklých v důsledku Vámi zvoleného způsobu dodání, který je jiný než nejlevnější způsob standardního dodání nabízený naší společností). Pro vrácení plateb použijeme stejný platební prostředek, který jste použil(a) pro provedení počáteční transakce.</section>
         <section id="return_address">Zboží zašlete na adresu: {merchant_return_address}</section>
     </annex_ia>
@@ -34,5 +34,5 @@
 (*) Nehodící se škrtněte.
 
 —
-Toto je oficiální vzorový formulář pro odstoupení od smlouvy stanovený přílohou I písm. B směrnice 2011/83/EU. Použití tohoto formuláře je NEPOVINNÉ — o svém rozhodnutí odstoupit od smlouvy nás můžete informovat i jakýmkoliv jiným jednoznačným prohlášením (dopisem, faxem nebo e-mailem) zaslaným na výše uvedený kontakt.</annex_ib>
+Toto je oficiální vzorový formulář pro odstoupení od smlouvy stanovený přílohou I písm. B směrnice 2011/83/EU. Použití tohoto formuláře je NEPOVINNÉ — o svém rozhodnutí odstoupit od smlouvy nás můžete informovat i jakýmkoliv jiným jednoznačným prohlášením (dopisem nebo e-mailem) zaslaným na výše uvedený kontakt.</annex_ib>
 </config>

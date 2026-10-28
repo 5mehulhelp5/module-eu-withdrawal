@@ -10,11 +10,9 @@
             <block class="Magento\Backend\Block\Template"
                    name="mageme_eu_withdrawal_feed_notice"
                    after="page.title"
-                   template="MageMe_EUWithdrawal::feed-notice.phtml">
+                   template="MageMe_Core::feed-notice.phtml">
                 <arguments>
-                    <argument name="feed_notice" xsi:type="object">
-                        MageMe\EUWithdrawal\ViewModel\Adminhtml\FeedNotice
-                    </argument>
+                    <argument name="feed_notice" xsi:type="object">MageMe\Core\ViewModel\Adminhtml\FeedNotice</argument>
                 </arguments>
             </block>
         </referenceContainer>

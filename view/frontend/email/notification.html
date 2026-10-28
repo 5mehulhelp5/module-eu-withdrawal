@@ -4,6 +4,7 @@
     "var order_increment_id":"Order number",
     "var request_increment_id":"Return request number",
     "var consumer_name":"Consumer name",
+    "var consumer_email":"Address the receipt is sent to",
     "var contact_email":"Contact email",
     "var contact_page_url":"Contact page URL (falls back to a support email link when empty)",
     "var view_url":"Order view / withdrawal URL",
@@ -40,6 +41,18 @@
                 <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Order number"}}</td>
                 <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;font-weight:600;">#{{var order_increment_id}}</td>
             </tr>
+            {{depend consumer_name}}
+            <tr>
+                <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Name"}}</td>
+                <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;">{{var consumer_name}}</td>
+            </tr>
+            {{/depend}}
+            {{depend consumer_email}}
+            <tr>
+                <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Receipt sent to"}}</td>
+                <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;">{{var consumer_email}}</td>
+            </tr>
+            {{/depend}}
             <tr>
                 <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Requested on"}}</td>
                 <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;">{{var submitted_at_formatted}}</td>
@@ -68,7 +81,7 @@
         <td valign="top" style="padding:14px 12px 14px 18px;width:36px;font-size:18px;color:#1d4ed8;">&#9432;</td>
         <td style="padding:14px 18px 14px 0;font-size:13px;color:#1e3a8a;line-height:1.5;">
             <strong>{{trans "What happens next?"}}</strong><br />
-            {{trans "We'll inspect your return and notify you once approved. Refunds are issued to your original payment method within 5–7 business days after approval."}}
+            {{trans "We'll inspect your return and notify you once approved. We refund you no later than 14 days after we received your withdrawal. We may wait until we have the items back or you have shown that you sent them, whichever comes first. The refund goes to your original payment method."}}
         </td>
     </tr>
 </table>

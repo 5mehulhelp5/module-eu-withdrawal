@@ -60,7 +60,7 @@
                     <enable_other>1</enable_other>
                 </return_reasons>
                 <review>
-                    <shipping_info_text>You'll receive a prepaid shipping label in the confirmation email.</shipping_info_text>
+                    <shipping_info_text></shipping_info_text>
                     <return_policy_url>return-policy</return_policy_url>
                 </review>
             </frontend>

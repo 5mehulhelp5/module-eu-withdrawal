@@ -12,6 +12,7 @@ use MageMe\EUWithdrawal\Exception\NoEligibleItemsException;
 use MageMe\EUWithdrawal\Model\Frontend\ReasonsConfigReader;
 use MageMe\EUWithdrawal\Model\Request\CreateRequestInput;
 use MageMe\EUWithdrawal\Model\Request\RequestCreator;
+use MageMe\EUWithdrawal\Model\Request\StatementIdentityResolver;
 use MageMe\EUWithdrawal\Model\Security\AntiEnumeration;
 use MageMe\EUWithdrawal\Model\Security\ResponseTimer;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -38,6 +39,7 @@ class Submit implements HttpPostActionInterface, CsrfAwareActionInterface
      * @param LocaleResolverInterface $localeResolver
      * @param ResponseTimer $responseTimer
      * @param ReasonsConfigReader $reasonsConfig
+     * @param StatementIdentityResolver $statementIdentity
      */
     public function __construct(
         private readonly RequestInterface $request,
@@ -49,6 +51,7 @@ class Submit implements HttpPostActionInterface, CsrfAwareActionInterface
         private readonly LocaleResolverInterface $localeResolver,
         private readonly ResponseTimer $responseTimer,
         private readonly ReasonsConfigReader $reasonsConfig,
+        private readonly StatementIdentityResolver $statementIdentity,
     ) {
     }
 
@@ -64,6 +67,10 @@ class Submit implements HttpPostActionInterface, CsrfAwareActionInterface
         $name = trim((string) $this->request->getPost('name'));
         $orderId = trim((string) $this->request->getPost('order_id'));
         $email = trim((string) $this->request->getPost('email'));
+        if ($this->customerSession->isLoggedIn()) {
+            // A signed-in customer withdraws under the account, whatever the form posted.
+            ['name' => $name, 'email' => $email] = $this->statementIdentity->resolve(null);
+        }
 
         if ($name === '' || $orderId === '' || $email === '') {
             $this->messageManager->addErrorMessage(__('Please fill in all required fields.'));

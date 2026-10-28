@@ -10,13 +10,13 @@ namespace MageMe\EUWithdrawal\Model\Rule;
 use MageMe\EUWithdrawal\Api\Data\EligibilityDecisionInterface;
 use MageMe\EUWithdrawal\Api\Data\EligibilityRequestInterface;
 use MageMe\EUWithdrawal\Api\RuleInterface;
-use MageMe\EUWithdrawal\Exception\InvalidConfigurationException;
 use MageMe\EUWithdrawal\Exception\NoDeliveryInfoException;
 use MageMe\EUWithdrawal\Model\Config\Source\ContractType;
 use MageMe\EUWithdrawal\Model\Config\Source\UnconfirmedDeliveryBehavior;
 use MageMe\EUWithdrawal\Api\Period\Art10ExtensionCheckerInterface;
 use MageMe\EUWithdrawal\Model\Period\AnchorResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\ScopeInterface;
 
 class PeriodRule extends AbstractRule
@@ -100,28 +100,9 @@ class PeriodRule extends AbstractRule
                     ->withDeny(self::REASON_DELIVERY_DATE_UNRECORDED, self::BASIS_NO_DELIVERY_DATE);
             }
             return $current->withApplied(self::CODE);
-        } catch (InvalidConfigurationException) {
-            // Merchant has not yet picked a delivery-confirmation status.
-            // Fail open (same as no-delivery-info) so the storefront keeps
-            // surfacing the right of withdrawal — it just can't show a
-            // concrete deadline until the merchant configures the trigger.
-            return $current->withApplied(self::CODE);
         }
 
-        $days = max(
-            self::WITHDRAWAL_DAYS,
-            (int) $this->scopeConfig->getValue(
-                self::XML_PERIOD_DAYS,
-                ScopeInterface::SCOPE_STORE,
-                $request->getStoreId(),
-            ),
-        );
-        $periodEnd = $anchorDate->modify('+' . $days . ' days');
-
-        if ($this->extensionChecker->shouldExtend($request->getOrder())) {
-            $periodEnd = $periodEnd->modify('+' . self::ART10_EXTENSION_MONTHS . ' months');
-        }
-        $periodEnd = $periodEnd->setTime(23, 59, 59);
+        $periodEnd = $this->periodEndFrom($anchorDate, $request->getOrder(), $request->getStoreId());
 
         $decision = $current->withPeriodEnd($periodEnd)->withApplied(self::CODE);
 
@@ -130,6 +111,37 @@ class PeriodRule extends AbstractRule
         }
 
         return $decision;
+    }
+
+    /**
+     * Last moment of the order's withdrawal period, or null while nothing dates the delivery.
+     *
+     * @param OrderInterface $order
+     * @param int $storeId
+     * @return \DateTimeImmutable|null
+     */
+    public function resolvePeriodEnd(OrderInterface $order, int $storeId): ?\DateTimeImmutable
+    {
+        try {
+            $anchorDate = $this->anchorResolver->resolve($order, $storeId);
+        } catch (NoDeliveryInfoException) {
+            return null;
+        }
+        return $this->periodEndFrom($anchorDate, $order, $storeId);
+    }
+
+    private function periodEndFrom(\DateTimeImmutable $anchorDate, OrderInterface $order, int $storeId): \DateTimeImmutable
+    {
+        $days = max(
+            self::WITHDRAWAL_DAYS,
+            (int) $this->scopeConfig->getValue(self::XML_PERIOD_DAYS, ScopeInterface::SCOPE_STORE, $storeId),
+        );
+        $periodEnd = $anchorDate->modify('+' . $days . ' days');
+
+        if ($this->extensionChecker->shouldExtend($order)) {
+            $periodEnd = $periodEnd->modify('+' . self::ART10_EXTENSION_MONTHS . ' months');
+        }
+        return $periodEnd->setTime(23, 59, 59);
     }
 
     private function isUnrecordedDeliveredOrder(EligibilityRequestInterface $request): bool

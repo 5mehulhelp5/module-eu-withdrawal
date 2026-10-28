@@ -48,7 +48,7 @@
     </template>
     <template locale="de_DE" jurisdiction="__eu_generic__">
         <consent>Ich stimme der sofortigen Bereitstellung des digitalen Inhalts vor Ablauf der 14-tägigen Widerrufsfrist ausdrücklich zu.</consent>
-        <acknowledgment>Mit dieser Zustimmung verzichte ich auf mein Widerrufsrecht, sobald die Ausführung begonnen hat (Art. 16(m) VRRL).</acknowledgment>
+        <acknowledgment>Mit dieser Zustimmung verzichte ich auf mein Widerrufsrecht, sobald die Ausführung begonnen hat (Art. 16 lit. m VRRL).</acknowledgment>
     </template>
     <template locale="fi_FI" jurisdiction="FI">
         <consent>Pyydän nimenomaisesti, että digitaalinen sisältö / digitaalinen palvelu toimitetaan ennen 14 päivän peruuttamisajan päättymistä.</consent>
@@ -68,7 +68,7 @@
     </template>
     <template locale="nl_NL" jurisdiction="__eu_generic__">
         <consent>Ik geef uitdrukkelijk toestemming voor onmiddellijke levering van de digitale inhoud voor het einde van de bedenktijd van 14 dagen.</consent>
-        <acknowledgment>Ik aanvaard dat ik mijn herroepingsrecht verlies zodra de uitvoering is begonnen (art. 16(m) Richtlijn 2011/83/EU).</acknowledgment>
+        <acknowledgment>Ik aanvaard dat ik mijn herroepingsrecht verlies zodra de uitvoering is begonnen (art. 16 onder m Richtlijn 2011/83/EU).</acknowledgment>
     </template>
     <template locale="fr_FR" jurisdiction="FR">
         <consent>Je demande expressément l'exécution du contenu numérique / du service numérique avant la fin du délai de rétractation de 14 jours (art. L. 221-25 C. consomm.).</consent>
@@ -84,7 +84,7 @@
     </template>
     <template locale="fr_FR" jurisdiction="__eu_generic__">
         <consent>Je consens expressément à l'exécution immédiate du contenu numérique avant la fin du délai de rétractation de 14 jours.</consent>
-        <acknowledgment>J'accepte de perdre mon droit de rétractation dès le début de l'exécution (art. 16(m) Directive 2011/83/UE).</acknowledgment>
+        <acknowledgment>J'accepte de perdre mon droit de rétractation dès le début de l'exécution (art. 16, point m, de la directive 2011/83/UE).</acknowledgment>
     </template>
     <template locale="it_IT" jurisdiction="IT">
         <consent>Chiedo espressamente l'esecuzione del contenuto digitale / servizio digitale prima della scadenza del periodo di recesso di 14 giorni (art. 51, comma 8-bis, Codice del Consumo).</consent>

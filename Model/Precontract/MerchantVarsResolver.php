@@ -7,7 +7,9 @@ declare(strict_types=1);
 
 namespace MageMe\EUWithdrawal\Model\Precontract;
 
+use MageMe\EUWithdrawal\Model\Frontend\RouteResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -18,6 +20,7 @@ use Magento\Store\Model\StoreManagerInterface;
  * - trans_email/ident_support/email
  * - mageme_eu_withdrawal/withdrawal_window/period_days
  * - mageme_eu_withdrawal/precontract/return_address
+ * - the store's withdrawal entry page, where the withdrawal function lives
  */
 class MerchantVarsResolver
 {
@@ -36,10 +39,12 @@ class MerchantVarsResolver
      *
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManager
+     * @param RouteResolver $routeResolver
      */
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly StoreManagerInterface $storeManager,
+        private readonly RouteResolver $routeResolver,
     ) {
     }
 
@@ -52,7 +57,8 @@ class MerchantVarsResolver
     public function resolve(string $locale): array
     {
         $scope = ScopeInterface::SCOPE_STORE;
-        $storeId = (int) $this->storeManager->getStore()->getId();
+        $store = $this->storeManager->getStore();
+        $storeId = (int) $store->getId();
 
         $name     = (string) $this->scopeConfig->getValue(self::PATH_STORE_NAME, $scope, $storeId);
         $street   = (string) $this->scopeConfig->getValue(self::PATH_STORE_STREET, $scope, $storeId);
@@ -76,6 +82,10 @@ class MerchantVarsResolver
             'merchant_phone'          => $phone,
             'merchant_email'          => $email,
             'merchant_return_address' => $returnAddress,
+            'withdrawal_function_url' => $this->routeResolver->rewriteCanonical(
+                rtrim((string) $store->getBaseUrl(UrlInterface::URL_TYPE_LINK, true), '/') . '/' . RouteResolver::CANONICAL_FRONT_NAME . '/',
+                $storeId,
+            ),
         ];
     }
 }

@@ -137,7 +137,7 @@ class ReturnSummary extends Template
     public function getRefundPolicyText(): string
     {
         return (string) __(
-            'The refund will be issued using your original payment method within 5-7 business days after we receive your return.'
+            'We refund you no later than 14 days after we received your withdrawal. We may wait until we have the items back or you have shown that you sent them, whichever comes first. The refund goes to your original payment method.'
         );
     }
 

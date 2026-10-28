@@ -81,4 +81,8 @@
         <observer name="mageme_eu_withdrawal_add_order_comment_on_status_change"
                   instance="MageMe\EUWithdrawal\Observer\AddOrderCommentOnStatusChange"/>
     </event>
+    <event name="sales_order_save_after">
+        <observer name="mageme_eu_withdrawal_record_delivery_anchor"
+                  instance="MageMe\EUWithdrawal\Observer\RecordDeliveryAnchor"/>
+    </event>
 </config>

@@ -187,10 +187,10 @@ $adjustment = $block->getOrderAdjustmentRefund();
                 <?= $escaper->escapeHtml(__('You will receive a receipt email with the full withdrawal statement and integrity hash within a few minutes.')) ?>
             </li>
             <li>
-                <?= $escaper->escapeHtml(__('The %1-day window under Art. 9 CRD is locked to the moment you confirmed the withdrawal — nothing further is required from you to preserve the right.', $block->getWithdrawalPeriodDays())) ?>
+                <?= $escaper->escapeHtml(__('Please send the items back within 14 days of the day you told us you are withdrawing from the contract.')) ?>
             </li>
             <li>
-                <?= $escaper->escapeHtml(__('The final refund is determined after we receive the returned items (Art. 14(2)) and is issued to the original payment method. Expect the funds within 14 days of receipt.')) ?>
+                <?= $escaper->escapeHtml(__('We refund you no later than 14 days after we received your withdrawal. We may wait until we have the items back or you have shown that you sent them, whichever comes first. The refund goes to your original payment method. The amount may be reduced only if the items lost value because they were handled more than needed to check them.')) ?>
             </li>
         </ul>
     </aside>

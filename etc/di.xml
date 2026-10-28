@@ -17,11 +17,8 @@
     <preference for="MageMe\EUWithdrawal\Api\Data\Precontract\SnapshotResolverInterface"
                 type="MageMe\EUWithdrawal\Model\Precontract\LiveSnapshotResolver"/>
 
-    <!-- Default: assume the layout-injected Annex I block was shown
-         to the consumer, so the standard 14-day period applies (no Art.
-         10(1) extension). The Pro AnnexI add-on overrides this to a
-         DisplayEventBasedArt10ExtensionChecker that queries
-         mm_eu_withdrawal_display_event for forensic-grade defence. -->
+    <!-- The withdrawal period is never extended automatically (no Art.
+         10(1) extension), with or without the Pro AnnexI add-on. -->
     <preference for="MageMe\EUWithdrawal\Api\Period\Art10ExtensionCheckerInterface"
                 type="MageMe\EUWithdrawal\Model\Period\NoOpArt10ExtensionChecker"/>
 
@@ -173,4 +170,12 @@
                 type="MageMe\EUWithdrawal\Plugin\Translate\MergeParentLanguageStrings"/>
     </type>
 
+    <type name="Magento\Sales\Model\Order\RefundAdapterInterface">
+        <plugin name="mageme_eu_withdrawal_hold_refund_through_payment"
+                type="MageMe\EUWithdrawal\Plugin\Sales\HoldRefundThroughPayment"/>
+    </type>
+    <type name="Magento\Framework\Setup\Declaration\Schema\Diff\Diff">
+        <plugin name="mageme_eu_withdrawal_keep_disabled_addon_schema"
+                type="MageMe\EUWithdrawal\Plugin\Setup\KeepDisabledAddonSchema"/>
+    </type>
 </config>

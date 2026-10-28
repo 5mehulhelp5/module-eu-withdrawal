@@ -1,11 +1,35 @@
+## 1.2.0
+
++ New: Customers see the name and email address the withdrawal is filed under, also in the receipt and submission emails. If you use your own copy of these templates, add {{var consumer_name}} and {{var consumer_email}}.
++ New: Receipts list the name of each returned product.
++ New: If an automatic credit memo stops halfway, the request page shows it and lets you link the existing credit memo or mark the request as refunded.
++ New: Turning off a Pro add-on keeps its data.
+- Fix: A withdrawal can no longer be refunded twice.
+- Fix: When a refund's outcome is unknown, the request blocks new refunds until you have checked the payment provider.
+- Fix: Orders completed without a history entry can be withdrawn again; the period starts when the order was completed or last shipped.
+- Fix: Without Delivery Confirmation Statuses, the period ends 14 days after the last shipment instead of never.
+- Fix: Return and refund deadlines shown to customers follow the law; the "5–7 business days" promise and the prepaid return label are gone.
+- Fix: The summary after submitting matches the review step.
+- Fix: The Luma checkout shows the same digital-content consent text that is saved with the order.
+- Fix: A customer who changed the account email can withdraw from older orders.
+- Fix: A signed-in customer can no longer withdraw another account's order by its email address.
+- Fix: Customers with many orders no longer see orders repeated in the withdrawal list.
+- Fix: A form left open for a long time no longer fails with "Invalid form key".
+* Change: Requires MageMe Core 2.2. Update Hyvä EU Withdrawal to 1.1.0 and Auto-Approval to 1.0.3 at the same time.
+* Change: All confirmation pages show the same return and refund texts; if you translated the old ones yourself, translate the new ones.
+* Change: The Return Shipping Notice is empty by default; your own notice is kept.
+* Change: The checkout withdrawal information mentions withdrawing online and links to your withdrawal page; fax is no longer listed. If your theme has its own copy of an Annex I file, add the {withdrawal_function_url} sentence.
+* Change: The German button reads "Vertrag widerrufen"; your own labels are kept.
+* Change: An unused exception class is removed; custom code should catch LocalizedException.
+
 ## 1.1.6
 
 + New: The request grid shows the newest MageMe announcement, with a dismiss for roles allowed to mark notifications read.
++ New: A status change made by the Auto-Approval add-on can now record the decision behind it in the audit trail.
 - Fix: The digital-content waiver step no longer loads in the checkout while the module is disabled.
 - Fix: Order and shipment emails no longer include the withdrawal link while the module is disabled.
 - Fix: The waiver confirmation email is no longer sent while the module or the checkout waiver step is disabled.
 - Fix: A credit memo started from a withdrawal request now keeps the quantities, shipping and adjustment amounts entered on the credit memo form; it used to refund the pre-filled figures instead.
-+ New: A status change made by the Auto-Approval add-on can now record the decision behind it in the audit trail.
 
 ## 1.1.5
 

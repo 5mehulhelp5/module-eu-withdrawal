@@ -9,7 +9,10 @@ namespace MageMe\EUWithdrawal\Observer;
 
 use MageMe\EUWithdrawal\Api\RequestRepositoryInterface;
 use MageMe\EUWithdrawal\Controller\Adminhtml\Request\StartCreditMemo;
-use Magento\Backend\Model\Session as BackendSession;
+use MageMe\EUWithdrawal\Model\Refund\CreditmemoFormBinding;
+use MageMe\EUWithdrawal\Model\Refund\RefundInFlight;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
+use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Psr\Log\LoggerInterface;
@@ -17,29 +20,37 @@ use Psr\Log\LoggerInterface;
 /**
  * Listens on `sales_order_creditmemo_save_after`. When the admin started
  * the credit memo flow from a withdrawal request (via the "Issue Credit
- * Memo" button on the request edit page), `StartCreditMemo` stashed the
- * request_id in the admin session. This observer reads it back, links the
- * newly-saved credit memo's id to `mm_eu_withdrawal_request.refund_creditmemo_id`,
- * then clears the session bag so a later unrelated credit memo doesn't
- * get linked to the same request.
+ * Memo" button on the request edit page), the form `StartCreditMemo` opened
+ * carries the request id into its save request. This observer reads it back
+ * through CreditmemoFormBinding
+ * and links the newly-saved credit memo's id to
+ * `mm_eu_withdrawal_request.refund_creditmemo_id`, unless the request is
+ * already refunded otherwise. The link finishes the hold GuardCreditmemoRefund
+ * took for this refund.
  *
- * The link is best-effort: if the request load fails or the stash is
- * empty (admin issued the credit memo through the standard order flow,
- * not through our button), the observer no-ops silently.
+ * The link is best-effort: if the request load fails or the memo was not
+ * saved from that form (admin issued the credit memo through the standard
+ * order flow, not through our button), the observer no-ops silently.
  */
 class LinkCreditMemoToRequest implements ObserverInterface
 {
     /**
      * Constructor.
      *
-     * @param BackendSession $backendSession
+     * @param CreditmemoFormBinding $formBinding
      * @param RequestRepositoryInterface $requestRepository
      * @param LoggerInterface $logger
+     * @param AuthorizationInterface $authorization
+     * @param RequestResource $requestResource
+     * @param RefundInFlight $inFlight
      */
     public function __construct(
-        private readonly BackendSession $backendSession,
+        private readonly CreditmemoFormBinding $formBinding,
         private readonly RequestRepositoryInterface $requestRepository,
         private readonly LoggerInterface $logger,
+        private readonly AuthorizationInterface $authorization,
+        private readonly RequestResource $requestResource,
+        private readonly RefundInFlight $inFlight,
     ) {
     }
 
@@ -51,8 +62,8 @@ class LinkCreditMemoToRequest implements ObserverInterface
      */
     public function execute(Observer $observer): void
     {
-        $requestId = (int) $this->backendSession->getData(StartCreditMemo::SESSION_KEY, true);
-        if ($requestId <= 0) {
+        $requestId = $this->formBinding->requestId();
+        if ($requestId <= 0 || !$this->authorization->isAllowed(StartCreditMemo::ADMIN_RESOURCE)) {
             return;
         }
         $creditmemo = $observer->getEvent()->getCreditmemo();
@@ -66,8 +77,7 @@ class LinkCreditMemoToRequest implements ObserverInterface
         try {
             $request = $this->requestRepository->get($requestId);
             if ((int) $creditmemo->getOrderId() !== (int) $request->getOrderId()) {
-                // Stale session bag: this credit memo belongs to a different order
-                // than the withdrawal request the admin started from. Do not link.
+                // The form names a withdrawal request of another order. Do not link.
                 $this->logger->warning(
                     'EUWithdrawal: creditmemo order does not match the withdrawal request order; skipping link.',
                     [
@@ -79,8 +89,14 @@ class LinkCreditMemoToRequest implements ObserverInterface
                 );
                 return;
             }
-            $request->setData('refund_creditmemo_id', $creditmemoId);
-            $this->requestRepository->save($request);
+            $refund = $this->inFlight->current();
+            $token = $refund !== null && $refund['request_id'] === $requestId ? $refund['token'] : null;
+            if (!$this->requestResource->linkRefundCreditmemo($requestId, $creditmemoId, $token)) {
+                $this->logger->warning(
+                    'EUWithdrawal: the withdrawal request is already refunded otherwise; creditmemo not linked.',
+                    ['request_id' => $requestId, 'creditmemo_id' => $creditmemoId],
+                );
+            }
         } catch (\Throwable $t) {
             $this->logger->warning(
                 'EUWithdrawal: failed to link creditmemo to request: ' . $t->getMessage(),

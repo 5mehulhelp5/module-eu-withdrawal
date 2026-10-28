@@ -91,7 +91,7 @@ class RequestCreator
         if ($order === null) {
             return CreateRequestResult::silentFailure();
         }
-        if (strcasecmp((string) $order->getCustomerEmail(), $input->customerEmail) !== 0) {
+        if (!$this->isOwnedBy($order, $input)) {
             return CreateRequestResult::silentFailure();
         }
 
@@ -207,6 +207,11 @@ class RequestCreator
                 RequestInterface::TAX_REFUND => $combinedTaxRefund > 0 ? $combinedTaxRefund : null,
                 RequestInterface::TOTAL_REFUND => $breakdown->getTotal(),
                 RequestInterface::SUBMITTED_AT => $now,
+                // The end of the withdrawal period as it stood at submission, from the decision that admitted
+                // the request; NULL when the period has not started or does not apply.
+                RequestInterface::PERIOD_END_AT => $orderDecision->getPeriodEnd()
+                    ?->setTimezone(new \DateTimeZone('UTC'))
+                    ->format('Y-m-d H:i:s'),
             ]);
 
             $requestId = (int) $connection->lastInsertId(
@@ -330,6 +335,31 @@ class RequestCreator
             $connection->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * A signed-in customer owns the orders placed under their account, whatever email the order
+     * carries: Magento keeps the email an order was placed with when the account email changes. By
+     * email alone a signed-in customer owns only guest orders: an order of another account is never
+     * theirs, even when the two accounts share an email. A guest requester owns an order by its email.
+     *
+     * @param OrderInterface $order
+     * @param CreateRequestInput $input
+     * @return bool
+     */
+    private function isOwnedBy(OrderInterface $order, CreateRequestInput $input): bool
+    {
+        $orderCustomerId = (int) $order->getCustomerId();
+        if ($input->customerId !== null && $input->customerId > 0) {
+            if ($orderCustomerId === $input->customerId) {
+                return true;
+            }
+            if ($orderCustomerId > 0) {
+                return false;
+            }
+        }
+
+        return strcasecmp((string) $order->getCustomerEmail(), $input->customerEmail) === 0;
     }
 
     /**

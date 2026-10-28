@@ -7,9 +7,7 @@ declare(strict_types=1);
 
 namespace MageMe\EUWithdrawal\Model\Period;
 
-use MageMe\EUWithdrawal\Exception\InvalidConfigurationException;
 use MageMe\EUWithdrawal\Exception\NoDeliveryInfoException;
-use MageMe\EUWithdrawal\Model\Order\LatestShipmentDateResolver;
 use Magento\Sales\Api\Data\OrderInterface;
 
 /**
@@ -23,18 +21,15 @@ class DeliveryDateResolver
      * Constructor.
      *
      * @param AnchorResolver $anchorResolver
-     * @param LatestShipmentDateResolver $latestShipment
      */
     public function __construct(
         private readonly AnchorResolver $anchorResolver,
-        private readonly LatestShipmentDateResolver $latestShipment,
     ) {
     }
 
     /**
-     * Delivered-at timestamp (UTC `Y-m-d H:i:s`) anchored on the configured
-     * Delivery Confirmation Status; the latest shipment date when no status is
-     * configured; or null when the order has not been delivered yet.
+     * Delivered-at timestamp (UTC `Y-m-d H:i:s`) — the same anchor PeriodRule
+     * uses — or null when the order has not been delivered yet.
      *
      * @param OrderInterface $order
      * @return ?string
@@ -45,8 +40,6 @@ class DeliveryDateResolver
             return $this->anchorResolver->resolve($order, (int) $order->getStoreId())->format('Y-m-d H:i:s');
         } catch (NoDeliveryInfoException) {
             return null;
-        } catch (InvalidConfigurationException) {
-            return $this->latestShipment->resolve((int) $order->getEntityId());
         }
     }
 }

@@ -21,7 +21,7 @@ class ReceiptDto
     /**
      * @param array{name:string,email:string,reason:?string} $consumer
      * @param array{increment_id:string,created_at:string,total:string} $order
-     * @param array<int, array{order_item_id:int,sku:string,qty:int,refund_amount:string}> $items
+     * @param array<int, array{order_item_id:int,sku:string,name?:string,qty:int,refund_amount:string}> $items
      * @param array{items:string,shipping:string,tax:string,adjustment?:string,total:string} $refund
      * @param array{created_at:string,locale:string,ip_hash:string,user_agent:string} $receipt
      * @param array{name:string,vat_id:string,address:string} $merchant

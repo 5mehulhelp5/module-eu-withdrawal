@@ -24,8 +24,9 @@
         <sidebar>Withdraw from contract</sidebar>
     </locale>
     <!-- Existing languages, keep as-is from v1 -->
+    <!-- § 356a BGB names both buttons: "Vertrag widerrufen" and "Widerruf bestätigen". -->
     <locale code="de_DE">
-        <step1>Vertrag hier widerrufen</step1>
+        <step1>Vertrag widerrufen</step1>
         <step2>Widerruf bestätigen</step2>
         <sidebar>Vertrag widerrufen</sidebar>
     </locale>

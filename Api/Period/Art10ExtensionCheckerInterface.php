@@ -13,17 +13,11 @@ use Magento\Sales\Api\Data\OrderInterface;
  * Decides whether the withdrawal period should be extended under Art.
  * 10(1) Directive 2011/83/EU.
  *
- * Two implementations bind to this interface:
- *
- *  - Default: `Model\Period\NoOpArt10ExtensionChecker` always
- *    returns false. Free cannot prove pre-contract display happened
- *    (no display-event recording), so the conservative-for-merchant
- *    default is "trust the layout-injected Annex I block was shown
- *    and apply the standard 14-day period."
- *  - Pro `MageMe_EUWithdrawalAnnexI`: queries
- *    `mm_eu_withdrawal_display_event` for the order's quote_id and
- *    returns true (extend to 12 months + 14 days) only when no
- *    display event exists. Forensic-grade Art. 10(1) defence.
+ * Bound to `Model\Period\NoOpArt10ExtensionChecker`, which always
+ * returns false: the period is never extended automatically. The Pro
+ * `MageMe_EUWithdrawalAnnexI` add-on does not replace it; it flags an
+ * order without a record of the withdrawal information being shown on
+ * the request page and leaves the decision to the merchant.
  */
 interface Art10ExtensionCheckerInterface
 {

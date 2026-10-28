@@ -24,6 +24,7 @@ class AnnexIRenderer
         'merchant_address',
         'merchant_email',
         'merchant_return_address',
+        'withdrawal_function_url',
     ];
 
     /**

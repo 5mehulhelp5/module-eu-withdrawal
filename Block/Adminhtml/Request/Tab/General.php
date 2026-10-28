@@ -10,6 +10,7 @@ namespace MageMe\EUWithdrawal\Block\Adminhtml\Request\Tab;
 use MageMe\EUWithdrawal\Api\Data\ItemInterface;
 use MageMe\EUWithdrawal\Api\Data\RequestInterface;
 use MageMe\EUWithdrawal\Api\ItemRepositoryInterface;
+use MageMe\EUWithdrawal\Model\Adminhtml\PostApprovalActionPolicy;
 use MageMe\EUWithdrawal\Model\Frontend\ReasonsConfigReader;
 use MageMe\EUWithdrawal\Model\Reimbursement\DueStateResolver;
 use Magento\Backend\Block\Template;
@@ -20,9 +21,14 @@ use Magento\Framework\Registry;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use MageMe\EUWithdrawal\Model\Item\BundleContentsViewAssembler;
 use MageMe\EUWithdrawal\Model\Item\ItemAmountResolver;
+use MageMe\EUWithdrawal\Controller\Adminhtml\Request\StartCreditMemo;
+use MageMe\EUWithdrawal\Controller\Adminhtml\Request\ToggleReimbursementPaid;
+use MageMe\EUWithdrawal\Model\Refund\InterruptedAutoMemo;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
 use Magento\Sales\Api\CreditmemoRepositoryInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 
 class General extends Template implements TabInterface
 {
@@ -46,6 +52,7 @@ class General extends Template implements TabInterface
      * @param DueStateResolver $dueStateResolver
      * @param CreditmemoRepositoryInterface $creditmemoRepository
      * @param BundleContentsViewAssembler $bundleContentsView
+     * @param InterruptedAutoMemo $interruptedAutoMemo
      * @param array $data
      */
     public function __construct(
@@ -59,6 +66,8 @@ class General extends Template implements TabInterface
         private readonly DueStateResolver $dueStateResolver,
         private readonly CreditmemoRepositoryInterface $creditmemoRepository,
         private readonly BundleContentsViewAssembler $bundleContentsView,
+        private readonly InterruptedAutoMemo $interruptedAutoMemo,
+        private readonly PostApprovalActionPolicy $actionPolicy,
         array $data = [],
     ) {
         parent::__construct($context, $data);
@@ -91,6 +100,149 @@ class General extends Template implements TabInterface
             'url' => $this->getUrl('sales/order_creditmemo/view', ['creditmemo_id' => $creditmemoId]),
             'total' => $this->formatPrice((float) $creditmemo->getGrandTotal()),
         ];
+    }
+
+    /**
+     * The unknown refund outcome for the summary block: since when, and the actions that resolve it — the
+     * credit memo the automatic issue left on the order (to link), recording the refund with an offline
+     * memo, and clearing the outcome to refund again. Null when the outcome of no refund is unknown.
+     *
+     * `waits_until` is set while the refund whose hold ran out may still finish: recording it offline and
+     * clearing the outcome wait until then.
+     *
+     * @return array{since: string, waits_until: string|null, creditmemo: array{increment_id: string, url: string, link_url: string}|null, offline_url: string|null, clear_url: string, form_key: string}|null
+     */
+    public function getRefundOutcomeUnknown(): ?array
+    {
+        $request = $this->getRequestEntity();
+        if ($request === null) {
+            return null;
+        }
+        $since = $this->interruptedAutoMemo->outcomeUnknownSince($request);
+        if ($since === null) {
+            return null;
+        }
+        $requestId = (int) $request->getRequestId();
+        $creditmemo = null;
+        $creditmemoId = $this->interruptedAutoMemo->unlinkedMemoId($request);
+        if ($creditmemoId !== null) {
+            try {
+                $incrementId = (string) ($this->creditmemoRepository->get($creditmemoId)->getIncrementId() ?? $creditmemoId);
+            } catch (NoSuchEntityException) {
+                $incrementId = (string) $creditmemoId;
+            }
+            $creditmemo = [
+                'increment_id' => $incrementId,
+                'url' => $this->getUrl('sales/order_creditmemo/view', ['creditmemo_id' => $creditmemoId]),
+                'link_url' => $this->getUrl(
+                    'mageme_eu_withdrawal/request/linkCreditMemo',
+                    ['request_id' => $requestId, 'creditmemo_id' => $creditmemoId],
+                ),
+            ];
+        }
+        $startUrl = $this->startCreditMemoUrl($request);
+        $waitsUntil = $this->interruptedAutoMemo->outcomeActionsWaitUntil($request);
+
+        return [
+            'since' => $this->formatIsoDate($since . ' UTC'),
+            'waits_until' => $waitsUntil === null ? null : $this->formatIsoDate($waitsUntil . ' UTC'),
+            'creditmemo' => $creditmemo,
+            'offline_url' => $startUrl === null ? null : $this->getUrl(
+                'mageme_eu_withdrawal/request/startCreditMemo',
+                ['request_id' => $requestId, '_query' => [StartCreditMemo::OFFLINE_RECORD_PARAM => 1]],
+            ),
+            'clear_url' => $this->getUrl('mageme_eu_withdrawal/request/clearRefundOutcome', ['request_id' => $requestId]),
+            'form_key' => $this->getFormKey(),
+        ];
+    }
+
+    /**
+     * Whether the automatic credit memo issue holds the request right now: staff wait for it instead of
+     * refunding, linking a memo or marking the request as refunded.
+     *
+     * @return bool
+     */
+    public function isAutomaticRefundInProgress(): bool
+    {
+        $request = $this->getRequestEntity();
+
+        return $request !== null
+            && $this->interruptedAutoMemo->refundHolder($request) === RequestResource::LEASE_HOLDER_AUTO;
+    }
+
+    /**
+     * The interrupted automatic credit memo for the summary block: when the automatic issue claimed
+     * the request, the credit memo on the order that refunds the withdrawn items and no request links,
+     * and the action that links it to this request; null when the request is not interrupted.
+     *
+     * @return array{claimed_at: string, creditmemo: array{increment_id: string, url: string}|null, link: array{url: string, form_key: string}|null, start_creditmemo_url: string|null}|null
+     */
+    public function getInterruptedAutoMemo(): ?array
+    {
+        $request = $this->getRequestEntity();
+        if ($request === null) {
+            return null;
+        }
+        $claimedAt = $this->interruptedAutoMemo->claimedAt($request);
+        if ($claimedAt === null) {
+            return null;
+        }
+        $creditmemo = null;
+        $link = null;
+        $creditmemoId = $this->interruptedAutoMemo->unlinkedMemoId($request);
+        if ($creditmemoId !== null) {
+            try {
+                $incrementId = (string) ($this->creditmemoRepository->get($creditmemoId)->getIncrementId() ?? $creditmemoId);
+            } catch (NoSuchEntityException) {
+                $incrementId = (string) $creditmemoId;
+            }
+            $creditmemo = [
+                'increment_id' => $incrementId,
+                'url' => $this->getUrl('sales/order_creditmemo/view', ['creditmemo_id' => $creditmemoId]),
+            ];
+            $link = [
+                'url' => $this->getUrl(
+                    'mageme_eu_withdrawal/request/linkCreditMemo',
+                    ['request_id' => (int) $request->getRequestId(), 'creditmemo_id' => $creditmemoId],
+                ),
+                'form_key' => $this->getFormKey(),
+            ];
+        }
+
+        return [
+            'claimed_at' => $this->formatIsoDate($claimedAt . ' UTC'),
+            'creditmemo' => $creditmemo,
+            'link' => $link,
+            'start_creditmemo_url' => $creditmemo === null ? $this->startCreditMemoUrl($request) : null,
+        ];
+    }
+
+    /**
+     * The request's Issue Credit Memo URL, offered on the same terms as the top-bar button:
+     * an approved request with no linked credit memo and no manual refunded mark, on an
+     * order that can take a credit memo.
+     *
+     * @param RequestInterface $request
+     * @return string|null
+     */
+    private function startCreditMemoUrl(RequestInterface $request): ?string
+    {
+        if ($request->getStatus() !== RequestInterface::STATUS_APPROVED
+            || (int) ($request->getRefundCreditmemoId() ?? 0) > 0
+            || $request->getReimbursementPaidAt() !== null
+        ) {
+            return null;
+        }
+        $order = $this->getOrder();
+        if (!$order instanceof Order
+            || $this->actionPolicy->resolve($order) !== PostApprovalActionPolicy::CREDITMEMO
+        ) {
+            return null;
+        }
+        return $this->getUrl(
+            'mageme_eu_withdrawal/request/startCreditMemo',
+            ['request_id' => (int) $request->getRequestId()],
+        );
     }
 
     /**
@@ -161,7 +313,10 @@ class General extends Template implements TabInterface
         return [
             'url' => $this->getUrl(
                 'mageme_eu_withdrawal/request/toggleReimbursementPaid',
-                ['request_id' => (int) $request->getRequestId()],
+                [
+                    'request_id' => (int) $request->getRequestId(),
+                    ToggleReimbursementPaid::PAID_PARAM => $request->getReimbursementPaidAt() !== null ? 0 : 1,
+                ],
             ),
             'form_key' => $this->getFormKey(),
             'is_manual_paid' => $request->getReimbursementPaidAt() !== null,

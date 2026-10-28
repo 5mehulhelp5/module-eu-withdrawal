@@ -62,6 +62,11 @@ interface RequestInterface
     public const REIMBURSEMENT_WITHHELD_AT = 'reimbursement_withheld_at';
     public const REIMBURSEMENT_LAST_ALERTED_AT = 'reimbursement_last_alerted_at';
     public const REIMBURSEMENT_PAID_AT     = 'reimbursement_paid_at';
+    public const REFUND_ISSUE_CLAIMED_AT   = 'refund_issue_claimed_at';
+    public const REFUND_LEASE_UNTIL        = 'refund_lease_until';
+    public const REFUND_LEASE_HOLDER       = 'refund_lease_holder';
+    public const REFUND_LEASE_TOKEN        = 'refund_lease_token';
+    public const REFUND_OUTCOME_UNKNOWN_AT = 'refund_outcome_unknown_at';
 
     /** Get request id. */
     public function getRequestId(): int;

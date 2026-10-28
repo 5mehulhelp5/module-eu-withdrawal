@@ -9,6 +9,8 @@ namespace MageMe\EUWithdrawal\Block\Adminhtml\Request;
 
 use MageMe\EUWithdrawal\Api\Data\RequestInterface;
 use MageMe\EUWithdrawal\Model\Adminhtml\PostApprovalActionPolicy;
+use MageMe\EUWithdrawal\Model\Refund\InterruptedAutoMemo;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
 use Magento\Backend\Block\Widget\Context;
 use Magento\Backend\Block\Widget\Form\Container;
 use Magento\Framework\Data\Form\FormKey;
@@ -29,6 +31,7 @@ class Edit extends Container
      * @param FormKey $formKeyGenerator
      * @param OrderRepositoryInterface $orderRepository
      * @param PostApprovalActionPolicy $actionPolicy
+     * @param InterruptedAutoMemo $interruptedAutoMemo
      * @param array $data
      */
     public function __construct(
@@ -37,6 +40,7 @@ class Edit extends Container
         private readonly FormKey $formKeyGenerator,
         private readonly OrderRepositoryInterface $orderRepository,
         private readonly PostApprovalActionPolicy $actionPolicy,
+        private readonly InterruptedAutoMemo $interruptedAutoMemo,
         array $data = [],
     ) {
         $this->_coreRegistry = $registry;
@@ -103,9 +107,14 @@ class Edit extends Container
                     ],
                     -1,
                 );
-            } elseif (!$manuallyPaid) {
+            } elseif (!$manuallyPaid
+                && $this->interruptedAutoMemo->refundHolder($request) !== RequestResource::LEASE_HOLDER_AUTO
+                && $this->interruptedAutoMemo->outcomeUnknownSince($request) === null
+            ) {
                 // A manual paid mark means the refund already went out outside the
                 // request; offering a credit memo here would pay it a second time.
+                // While the automatic issue is refunding the request, staff wait for it; while
+                // the outcome of a refund is unknown, they resolve it on the Information tab.
                 $action = $this->actionPolicy->resolve($this->resolveOrder($request));
                 if ($action === PostApprovalActionPolicy::CREDITMEMO) {
                     $this->buttonList->add(

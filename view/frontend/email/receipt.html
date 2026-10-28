@@ -3,6 +3,7 @@
     "var request_increment_id":"Withdrawal number",
     "var order_increment_id":"Order number",
     "var consumer_name":"Consumer name",
+    "var consumer_email":"Address the receipt is sent to",
     "var refund_total":"Refund total",
     "var verify_url":"Verify URL",
     "var content_hash":"Integrity hash",
@@ -36,6 +37,18 @@
                 <td style="padding:6px 0;font-size:12px;color:#6b7280;width:50%;">{{trans "Order number"}}</td>
                 <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;font-weight:600;">#{{var order_increment_id}}</td>
             </tr>
+            {{depend consumer_name}}
+            <tr>
+                <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Name"}}</td>
+                <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;">{{var consumer_name}}</td>
+            </tr>
+            {{/depend}}
+            {{depend consumer_email}}
+            <tr>
+                <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Receipt sent to"}}</td>
+                <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;">{{var consumer_email}}</td>
+            </tr>
+            {{/depend}}
             <tr>
                 <td style="padding:6px 0;font-size:12px;color:#6b7280;">{{trans "Submitted on"}}</td>
                 <td style="padding:6px 0;font-size:13px;color:#0f172a;text-align:right;">{{var submitted_at_formatted}}</td>

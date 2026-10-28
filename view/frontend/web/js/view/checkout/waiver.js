@@ -38,6 +38,8 @@ define([
             this.items = ko.observableArray([]);
             this.consentExpress = ko.observable(false);
             this.lossAck = ko.observable(false);
+            this.consentText = ko.observable('');
+            this.acknowledgmentText = ko.observable('');
             this.loaded = ko.observable(false);
             this.isVisible = ko.observable(false);
             this.registered = false;
@@ -45,6 +47,8 @@ define([
             var self = this;
             this.canProceed = ko.computed(function () {
                 return self.loaded()
+                    && self.consentText() !== ''
+                    && self.acknowledgmentText() !== ''
                     && self.consentExpress()
                     && self.lossAck()
                     && self.items().length > 0;
@@ -78,7 +82,7 @@ define([
             var self = this;
             $.getJSON(this.contextUrl)
                 .done(function (resp) {
-                    self.items(resp.items || []);
+                    self.applyContext(resp);
                     self.loaded(true);
                     if (self.items().length > 0 && !self.registered) {
                         self.registerStep();
@@ -97,8 +101,21 @@ define([
             this.isVisible(true);
             var self = this;
             $.getJSON(this.contextUrl).done(function (resp) {
-                self.items(resp.items || []);
+                self.applyContext(resp);
             });
+        },
+
+        /**
+         * Shows the consent and acknowledgment texts Save records and hashes:
+         * every item carries the same pair for the store locale and billing
+         * country, so the step must not word them itself.
+         */
+        applyContext: function (resp) {
+            const items = resp.items || [];
+            const [first = {}] = items;
+            this.items(items);
+            this.consentText(first.consent_text || '');
+            this.acknowledgmentText(first.acknowledgment_text || '');
         },
 
         saveAndProceed: function () {
@@ -107,9 +124,22 @@ define([
             // The hash is jurisdiction-bound and the address commit races with
             // step entry — fetch the freshest context and post its hashes in
             // one go instead of trusting the copy cached at navigation time.
+            // When the texts changed meanwhile, the customer has not seen the
+            // new ones: show them and ask for both confirmations again. The
+            // texts are compared, not the hash: the hash also covers the billing
+            // country, which is often set only after the step was shown.
             $.getJSON(this.contextUrl)
                 .done(function (resp) {
-                    self.items(resp.items || []);
+                    const shownConsent = self.consentText();
+                    const shownAcknowledgment = self.acknowledgmentText();
+                    const [fresh = {}] = resp.items || [];
+                    self.applyContext(resp);
+                    if (fresh.consent_text !== shownConsent || fresh.acknowledgment_text !== shownAcknowledgment) {
+                        self.consentExpress(false);
+                        self.lossAck(false);
+                        alert({ content: $t('The consent text has changed for your billing country. Please read it and confirm again.') });
+                        return;
+                    }
                     self.postConsent();
                 })
                 .fail(function () {

@@ -157,12 +157,12 @@
                     <label>Delivery Confirmation Statuses</label>
                     <source_model>MageMe\EUWithdrawal\Model\Config\Source\DeliveryStatus</source_model>
                     <frontend_model>MageMe\Core\Block\Adminhtml\System\Config\Form\Field\Multiselect</frontend_model>
-                    <comment><![CDATA[Pick one or more order statuses whose <em>transition</em> means the customer received the goods in your fulfillment workflow. The 14-day withdrawal window starts on the timestamp of the order's <em>earliest</em> transition into <em>any</em> of the selected statuses (Art. 9(2)(b) Directive 2011/83/EU). Multi-select supports merchants who use several "delivered"-type statuses (e.g. <code>delivered</code> + <code>complete</code> + <code>delivered_partial</code>). Until the order reaches any of them, the right of withdrawal is open with no fixed deadline.]]></comment>
+                    <comment><![CDATA[Pick one or more order statuses that mean the customer received the goods. The 14-day withdrawal window starts the first time an order reaches any of them (Art. 9(2)(b) Directive 2011/83/EU). When an order reaches one without a recorded date — Magento sets <em>Complete</em> this way — the date of its last shipment is used. Leave empty to start every window at the last shipment. A shipment date is earlier than the delivery by the time in transit; if your carrier integration sets a <em>Delivered</em> status, select that one for the exact date. Until an order reaches a selected status, its withdrawal stays open with no fixed deadline.]]></comment>
                 </field>
                 <field id="unconfirmed_delivery_behavior" translate="label comment" type="select" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
                     <label>If Delivery Is Never Confirmed</label>
                     <source_model>MageMe\EUWithdrawal\Model\Config\Source\UnconfirmedDeliveryBehavior</source_model>
-                    <comment><![CDATA[When an order is already in a Delivery Confirmation Status but has no recorded transition into it (no delivery timestamp), choose whether its withdrawal stays open or it is treated as not eligible. Default: not eligible.]]></comment>
+                    <comment><![CDATA[For an order that is already in a Delivery Confirmation Status but has neither a recorded date nor a shipment (for example an imported or virtual order), choose whether its withdrawal stays open or it is treated as not eligible. Default: not eligible.]]></comment>
                 </field>
                 <field id="excluded_statuses" translate="label comment" type="multiselect" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Statuses Excluded From Withdrawal</label>
@@ -332,11 +332,11 @@
                     <label>Buttons</label>
                     <field id="button_label_step1" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
                         <label>Step 1 Button Label</label>
-                        <comment><![CDATA[<strong>⚠ Legal warning.</strong> Art. 11a(2) CRD requires the literal text "withdraw from contract here" <em>or a corresponding unambiguous formulation</em>. <strong>Leave empty</strong> to use the built-in, per-locale counsel-signed label (recommended). A value entered here overrides that label for this store view. <strong>Do not override unless you have received written advice from qualified consumer-law counsel in the target jurisdiction.</strong>]]></comment>
+                        <comment><![CDATA[<strong>⚠ Legal warning.</strong> Art. 11a(2) CRD requires the literal text "withdraw from contract here" <em>or a corresponding unambiguous formulation</em>. <strong>Leave empty</strong> to use the built-in label for each language. The built-in labels have not been reviewed by a lawyer; check them with your legal adviser. A value entered here overrides that label for this store view. <strong>Do not override unless you have received written advice from qualified consumer-law counsel in the target jurisdiction.</strong>]]></comment>
                     </field>
                     <field id="button_label_step2" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
                         <label>Step 2 Button Label (Confirmation)</label>
-                        <comment><![CDATA[<strong>⚠ Legal warning.</strong> This is the label on the final confirmation button. <strong>Leave empty</strong> to use the built-in, per-locale counsel-signed label (recommended). A value entered here overrides that label for this store view. Override only with written legal advice.]]></comment>
+                        <comment><![CDATA[<strong>⚠ Legal warning.</strong> This is the label on the final confirmation button. <strong>Leave empty</strong> to use the built-in label for each language. The built-in labels have not been reviewed by a lawyer; check them with your legal adviser. A value entered here overrides that label for this store view. Override only with written legal advice.]]></comment>
                     </field>
                 </group>
 

@@ -57,34 +57,153 @@ $statusBadgeLabel = \MageMe\EUWithdrawal\Model\Request\Source\Status::labelFor($
                         <td><?= $escaper->escapeHtml($block->formatIsoDate((string) $request->getCreatedAt())) ?></td>
                     </tr>
                     <?php $dueState = $block->getReimbursementDueState(); ?>
+                    <?php $interrupted = $block->getInterruptedAutoMemo(); ?>
+                    <?php $autoInProgress = $block->isAutomaticRefundInProgress(); ?>
+                    <?php $outcomeUnknown = $block->getRefundOutcomeUnknown(); ?>
+                    <?php $paidAction = $block->getReimbursementMarkPaidAction(); ?>
+                    <?php
+                    $markPaidJs = '';
+                    if ($paidAction !== null) {
+                        $paidConfirm = $paidAction['is_manual_paid']
+                            ? __('Remove the refunded mark? The reimbursement is tracked as outstanding again.')
+                            : __('Mark this reimbursement as already refunded outside the request — offline, bank transfer, or a credit memo raised from the order? No payment is sent; this only records it.');
+                        // This tab is rendered INSIDE the admin edit_form; a nested <form> is dropped
+                        // by the browser, so its submit button never fires. Build the POST in <body>
+                        // instead, exactly like the request's top-bar action buttons do.
+                        $markPaidJs = "if(confirm('" . addslashes((string) $paidConfirm) . "'))"
+                            . "{var f=document.createElement('form');f.method='POST';f.action='"
+                            . addslashes((string) $paidAction['url'])
+                            . "';var k=document.createElement('input');k.type='hidden';k.name='form_key';k.value='"
+                            . addslashes((string) $paidAction['form_key'])
+                            . "';f.appendChild(k);document.body.appendChild(f);f.submit();}return false;";
+                    }
+                    ?>
                     <?php if ($dueState !== null): ?>
                         <tr>
                             <th><?= $escaper->escapeHtml(__('Reimbursement')) ?></th>
                             <td>
                                 <?php $isOverdue = $dueState['code'] === \MageMe\EUWithdrawal\Model\Reimbursement\DueStateResolver::STATE_OVERDUE; ?>
-                                <span<?= $isOverdue ? ' style="color:#ca4a1f;font-weight:600;"' : '' ?>><?= $escaper->escapeHtml($dueState['label']) ?></span>
-                                <?php $paidAction = $block->getReimbursementMarkPaidAction(); ?>
-                                <?php if ($paidAction !== null): ?>
-                                    <?php
-                                    $paidLabel = $paidAction['is_manual_paid'] ? __('Unmark refunded') : __('Mark as refunded');
-                                    $paidConfirm = $paidAction['is_manual_paid']
-                                        ? __('Remove the refunded mark? The reimbursement is tracked as outstanding again.')
-                                        : __('Mark this reimbursement as already refunded outside the request — offline, bank transfer, or a credit memo raised from the order? No payment is sent; this only records it.');
-                                    // This tab is rendered INSIDE the admin edit_form; a nested <form> is dropped
-                                    // by the browser, so its submit button never fires. Build the POST in <body>
-                                    // instead, exactly like the request's top-bar action buttons do.
-                                    $markPaidJs = "if(confirm('" . addslashes((string) $paidConfirm) . "'))"
-                                        . "{var f=document.createElement('form');f.method='POST';f.action='"
-                                        . addslashes((string) $paidAction['url'])
-                                        . "';var k=document.createElement('input');k.type='hidden';k.name='form_key';k.value='"
-                                        . addslashes((string) $paidAction['form_key'])
-                                        . "';f.appendChild(k);document.body.appendChild(f);f.submit();}return false;";
-                                    ?>
+                                <?php
+                                $dueLabel = ($interrupted !== null || $outcomeUnknown !== null) && !$isOverdue ? __('Needs review') : $dueState['label'];
+                                ?>
+                                <span<?= $isOverdue ? ' style="color:#ca4a1f;font-weight:600;"' : '' ?>><?= $escaper->escapeHtml($dueLabel) ?></span>
+                                <?php if ($paidAction !== null && $interrupted === null && !$autoInProgress && $outcomeUnknown === null): ?>
+                                    <?php $paidLabel = $paidAction['is_manual_paid'] ? __('Unmark refunded') : __('Mark as refunded'); ?>
                                     <div style="margin-top:4px;">
                                         <a href="#" class="mm-eu-w-mark-paid" style="font-size:1.2rem;color:#1979c3;"
                                            onclick="<?= /* @noEscape */ $markPaidJs ?>"><?= $escaper->escapeHtml($paidLabel) ?></a>
                                     </div>
                                 <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if ($autoInProgress): ?>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Automatic Credit Memo')) ?></th>
+                            <td>
+                                <div class="message message-notice">
+                                    <div><?= $escaper->escapeHtml(__('Automatic refund in progress. Reload the page in a few minutes.')) ?></div>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if ($outcomeUnknown !== null): ?>
+                        <?php
+                        $postJs = static function (string $confirm, string $url, string $formKey) use ($escaper): string {
+                            return $escaper->escapeHtmlAttr(
+                                "if(confirm('" . $escaper->escapeJs($confirm) . "'))"
+                                . "{const f=document.createElement('form');f.method='POST';f.action='"
+                                . $escaper->escapeJs($url)
+                                . "';const k=document.createElement('input');k.type='hidden';k.name='form_key';k.value='"
+                                . $escaper->escapeJs($formKey)
+                                . "';f.appendChild(k);document.body.appendChild(f);f.submit();}return false;",
+                                false,
+                            );
+                        };
+                        ?>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Refund Outcome')) ?></th>
+                            <td>
+                                <div class="message message-error">
+                                    <div>
+                                        <strong><?= $escaper->escapeHtml(__('Refund outcome unknown since %1', $outcomeUnknown['since'])) ?></strong>
+                                        <p><?= $escaper->escapeHtml(__('A refund of this request did not finish, and your payment provider may have refunded the customer. Check the refund in your payment provider before you do anything else.')) ?></p>
+                                        <p><?= $escaper->escapeHtml(__('If the customer was refunded, record that refund with a button below. If not, choose Not Refunded, Refund Again.')) ?></p>
+                                    </div>
+                                </div>
+                                <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
+                                    <?php if ($paidAction !== null && !$paidAction['is_manual_paid']): ?>
+                                        <button type="button" class="action-secondary mm-eu-w-mark-paid"
+                                                onclick="<?= /* @noEscape */ $markPaidJs ?>"><?= $escaper->escapeHtml(__('Mark as Refunded')) ?></button>
+                                    <?php endif; ?>
+                                    <?php if ($outcomeUnknown['creditmemo'] !== null): ?>
+                                        <button type="button" class="action-secondary mm-eu-w-link-creditmemo"
+                                                onclick="<?= /* @noEscape */ $postJs(
+                                                    (string) __('Link credit memo #%1 to this withdrawal request? The request is then recorded as refunded by this credit memo. No money is sent and no new credit memo is created.', $outcomeUnknown['creditmemo']['increment_id']),
+                                                    (string) $outcomeUnknown['creditmemo']['link_url'],
+                                                    (string) $outcomeUnknown['form_key'],
+                                                ) ?>"><?= $escaper->escapeHtml(__('Link Credit Memo #%1', $outcomeUnknown['creditmemo']['increment_id'])) ?></button>
+                                    <?php endif; ?>
+                                    <?php $waits = $outcomeUnknown['waits_until'] !== null; ?>
+                                    <?php if ($outcomeUnknown['offline_url'] !== null): ?>
+                                        <?php $offlineConfirm = __('Record the refund your payment provider made with an offline credit memo? No money is sent.'); ?>
+                                        <button type="button" class="action-secondary mm-eu-w-offline-creditmemo"
+                                            <?php if ($waits): ?>disabled<?php else: ?>onclick="<?= $escaper->escapeHtmlAttr("if(confirm('" . $escaper->escapeJs((string) $offlineConfirm) . "')){setLocation('" . $escaper->escapeJs($outcomeUnknown['offline_url']) . "');}", false) ?>"<?php endif; ?>><?= $escaper->escapeHtml(__('Record Offline Credit Memo')) ?></button>
+                                    <?php endif; ?>
+                                    <button type="button" class="action-secondary mm-eu-w-clear-refund-outcome"
+                                        <?php if ($waits): ?>disabled<?php else: ?>onclick="<?= /* @noEscape */ $postJs(
+                                                (string) __('Refund again only if your payment provider shows no refund to the customer. The unknown outcome is cleared and you can issue the credit memo again.'),
+                                                (string) $outcomeUnknown['clear_url'],
+                                                (string) $outcomeUnknown['form_key'],
+                                            ) ?>"<?php endif; ?>><?= $escaper->escapeHtml(__('Not Refunded, Refund Again')) ?></button>
+                                </div>
+                                <?php if ($waits): ?>
+                                    <div class="admin__field-note mm-eu-w-refund-outcome-wait">
+                                        <?= $escaper->escapeHtml(__('Record Offline Credit Memo and Not Refunded, Refund Again become available at %1. Until then the earlier refund may still complete at your payment provider.', $outcomeUnknown['waits_until'])) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if ($interrupted !== null): ?>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Automatic Credit Memo')) ?></th>
+                            <td>
+                                <div class="message message-warning">
+                                    <div>
+                                        <strong><?= $escaper->escapeHtml(__('Interrupted at %1', $interrupted['claimed_at'])) ?></strong>
+                                        <?php if ($interrupted['creditmemo'] !== null && $interrupted['link'] !== null): ?>
+                                            <p><?= $escaper->escapeHtml(__('A credit memo on this order already refunds the withdrawn items and is not linked to any request. Link it to record this refund, or mark the request as refunded. Do not refund again.')) ?></p>
+                                            <p><a href="<?= $escaper->escapeUrl($interrupted['creditmemo']['url']) ?>"><?= $escaper->escapeHtml(__('View Credit Memo #%1', $interrupted['creditmemo']['increment_id'])) ?></a></p>
+                                        <?php else: ?>
+                                            <p><?= $escaper->escapeHtml(__('No credit memo was created. Check with your payment provider that the customer was not refunded before you issue a credit memo.')) ?></p>
+                                            <p><?= $escaper->escapeHtml(__('If the customer was refunded, record it with Mark as Refunded. If not, issue the refund with Issue Credit Memo.')) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
+                                    <?php if ($interrupted['creditmemo'] !== null && $interrupted['link'] !== null): ?>
+                                        <?php
+                                        $linkConfirm = __('Link credit memo #%1 to this withdrawal request? The request is then recorded as refunded by this credit memo. No money is sent and no new credit memo is created.', $interrupted['creditmemo']['increment_id']);
+                                        $linkJs = "if(confirm('" . addslashes((string) $linkConfirm) . "'))"
+                                            . "{const f=document.createElement('form');f.method='POST';f.action='"
+                                            . addslashes((string) $interrupted['link']['url'])
+                                            . "';const k=document.createElement('input');k.type='hidden';k.name='form_key';k.value='"
+                                            . addslashes((string) $interrupted['link']['form_key'])
+                                            . "';f.appendChild(k);document.body.appendChild(f);f.submit();}return false;";
+                                        ?>
+                                        <button type="button" class="action-secondary mm-eu-w-link-creditmemo"
+                                                onclick="<?= /* @noEscape */ $linkJs ?>"><?= $escaper->escapeHtml(__('Link Credit Memo #%1', $interrupted['creditmemo']['increment_id'])) ?></button>
+                                    <?php endif; ?>
+                                    <?php if ($paidAction !== null): ?>
+                                        <button type="button" class="action-secondary mm-eu-w-mark-paid"
+                                                onclick="<?= /* @noEscape */ $markPaidJs ?>"><?= $escaper->escapeHtml($paidAction['is_manual_paid'] ? __('Unmark refunded') : __('Mark as Refunded')) ?></button>
+                                    <?php endif; ?>
+                                    <?php if ($interrupted['start_creditmemo_url'] !== null): ?>
+                                        <button type="button" class="action-secondary mm-eu-w-start-creditmemo"
+                                                onclick="setLocation('<?= $escaper->escapeJs($interrupted['start_creditmemo_url']) ?>')"><?= $escaper->escapeHtml(__('Issue Credit Memo')) ?></button>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -127,7 +246,7 @@ $statusBadgeLabel = \MageMe\EUWithdrawal\Model\Request\Source\Status::labelFor($
                             <?php $attempts = (int) $request->getReceiptSendAttempts(); ?>
                             <?php if ($attempts > 0): ?>
                                 <span class="mm-eu-w-receipt-attempts">
-                                    (<?= $escaper->escapeHtml(__('%1 attempt(s)', $attempts)) ?>)
+                                    (<?= $escaper->escapeHtml($attempts === 1 ? __('%1 attempt', $attempts) : __('%1 attempts', $attempts)) ?>)
                                 </span>
                             <?php endif; ?>
                         </td>

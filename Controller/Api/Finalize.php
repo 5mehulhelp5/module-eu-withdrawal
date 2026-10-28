@@ -16,6 +16,7 @@ use MageMe\EUWithdrawal\Model\Customer\CustomerIdentityFactory;
 use MageMe\EUWithdrawal\Model\Lookup\OrderLookupByIncrementId;
 use MageMe\EUWithdrawal\Model\Request\CreateRequestInput;
 use MageMe\EUWithdrawal\Model\Request\RequestCreator;
+use MageMe\EUWithdrawal\Model\Request\StatementIdentityResolver;
 use MageMe\EUWithdrawal\Model\Security\AntiEnumeration;
 use MageMe\EUWithdrawal\Model\Security\ResponseTimer;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -65,6 +66,8 @@ class Finalize implements HttpPostActionInterface, CsrfAwareActionInterface
      * @param CustomerIdentityFactory $identityFactory
      * @param RequestRepositoryInterface $requestRepository
      * @param ReasonsConfigReader $reasonsConfig
+     * @param LocaleResolverInterface $localeResolver
+     * @param StatementIdentityResolver $statementIdentity
      */
     public function __construct(
         private readonly HttpRequestInterface $request,
@@ -84,6 +87,7 @@ class Finalize implements HttpPostActionInterface, CsrfAwareActionInterface
         private readonly RequestRepositoryInterface $requestRepository,
         private readonly ReasonsConfigReader $reasonsConfig,
         private readonly LocaleResolverInterface $localeResolver,
+        private readonly StatementIdentityResolver $statementIdentity,
     ) {
     }
 
@@ -105,9 +109,7 @@ class Finalize implements HttpPostActionInterface, CsrfAwareActionInterface
         $itemReasonsRaw = $payload['itemReasons'] ?? [];
 
         if ($this->customerSession->isLoggedIn()) {
-            $customer = $this->customerSession->getCustomer();
-            $email = (string) $customer->getEmail();
-            $name = trim(($customer->getFirstname() ?? '') . ' ' . ($customer->getLastname() ?? ''));
+            ['name' => $name, 'email' => $email] = $this->statementIdentity->resolve(null);
         } else {
             // Guest flow: pull name/email from the bound order (verified via
             // magic-link token OR Lookup-session). Refuses to trust whatever
@@ -121,9 +123,7 @@ class Finalize implements HttpPostActionInterface, CsrfAwareActionInterface
                 }
             }
             if ($guestOrder !== null) {
-                $email = (string) $guestOrder->getCustomerEmail();
-                $name = trim(($guestOrder->getCustomerFirstname() ?? '')
-                    . ' ' . ($guestOrder->getCustomerLastname() ?? ''));
+                ['name' => $name, 'email' => $email] = $this->statementIdentity->resolve($guestOrder);
             }
         }
 

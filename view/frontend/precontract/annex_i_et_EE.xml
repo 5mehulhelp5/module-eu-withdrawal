@@ -10,7 +10,7 @@
     <annex_ia>
         <section id="right_of_withdrawal">Teil on õigus põhjusi esitamata taganeda käesolevast lepingust {period_days} päeva jooksul.</section>
         <section id="period_start">Taganemistähtaeg lõpeb {period_days} päeva möödumisel alates päevast, mil teie või kolmas isik, kes ei ole kauba kättetoimetaja ja kelle te olete selleks otstarbeks määranud, on saanud kauba füüsiliselt oma valdusse. Digitaalse infosisu puhul, mida ei edastata füüsilisel andmekandjal, lõpeb tähtaeg 14 päeva pärast lepingu sõlmimist (välja arvatud juhul, kui te olete tellimisel sellest õigusest loobunud).</section>
-        <section id="how_to_exercise">Taganemisõiguse kasutamiseks teavitage meid — {merchant_name}, {merchant_address}, {merchant_phone}, {merchant_email} — oma otsusest taganeda käesolevast lepingust ühemõttelise avaldusega (nt posti, faksi või e-postiga saadetud kiri). Te võite selleks kasutada allpool esitatud taganemisteate näidisvormi, kuid see ei ole kohustuslik.</section>
+        <section id="how_to_exercise">Taganemisõiguse kasutamiseks teavitage meid — {merchant_name}, {merchant_address}, {merchant_phone}, {merchant_email} — oma otsusest taganeda käesolevast lepingust ühemõttelise avaldusega (nt posti või e-postiga saadetud kiri). Te võite selleks kasutada allpool esitatud taganemisteate näidisvormi, kuid see ei ole kohustuslik. Teil on võimalik kasutada oma taganemisõigust ka internetis aadressil {withdrawal_function_url}. Kui te kasutate seda internetipõhist funktsiooni, saadame teile põhjendamatu viivituseta püsival andmekandjal (näiteks e-kirjaga) kinnituse taganemisteate kättesaamise, sealhulgas selle sisu ning selle esitamise kuupäeva ja kellaaja kohta.</section>
         <section id="effects">Kui te taganete käesolevast lepingust, tagastame teile kõik teilt saadud maksed, sealhulgas tavalised kättetoimetamiskulud (välja arvatud täiendavad kulud, mis tulenevad teie valitud kättetoimetamisviisist, mis erineb meie pakutud kõige odavamast tavalisest kättetoimetamisviisist) põhjendamatu viivituseta ja igal juhul hiljemalt 14 päeva jooksul alates päevast, mil me saame teada teie otsusest käesolevast lepingust taganeda. Me teeme nimetatud tagasimaksed, kasutades sama makseviisi, mida te kasutasite algses tehingus.</section>
         <section id="return_address">Kaup tuleb tagastada aadressile: {merchant_return_address}</section>
     </annex_ia>
@@ -34,5 +34,5 @@
 (*) Mittevajalik maha tõmmata.
 
 —
-See on direktiivi 2011/83/EL I lisa B-osas ettenähtud ametlik taganemisteate näidisvorm. Selle vormi kasutamine on VABATAHTLIK — te võite oma taganemisotsusest meid teavitada ka mis tahes muu ühemõttelise avaldusega (kiri, faks või e-kiri), mis saadetakse ülaltoodud kontaktile.</annex_ib>
+See on direktiivi 2011/83/EL I lisa B-osas ettenähtud ametlik taganemisteate näidisvorm. Selle vormi kasutamine on VABATAHTLIK — te võite oma taganemisotsusest meid teavitada ka mis tahes muu ühemõttelise avaldusega (kiri või e-kiri), mis saadetakse ülaltoodud kontaktile.</annex_ib>
 </config>

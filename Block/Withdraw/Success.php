@@ -93,6 +93,8 @@ class Success extends Template
      * Configured withdrawal-period length in days, shown in customer-facing copy.
      *
      * @return int
+     * @deprecated 1.2.0 No template of this module calls it since 1.2.0; kept for theme overrides of
+     *             success.phtml and removed in the next major version.
      */
     public function getWithdrawalPeriodDays(): int
     {

@@ -8,8 +8,9 @@ declare(strict_types=1);
 namespace MageMe\EUWithdrawal\Model\Receipt;
 
 use MageMe\EUWithdrawal\Exception\ReceiptBuilderException;
+use MageMe\EUWithdrawal\Model\ResourceModel\Item\Item as ItemResource;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Phrase;
 use Magento\Store\Model\ScopeInterface;
 
@@ -21,11 +22,13 @@ class ReceiptBuilder
     /**
      * Constructor.
      *
-     * @param ResourceConnection $resource
+     * @param RequestResource $requestResource
+     * @param ItemResource $itemResource
      * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        private readonly ResourceConnection $resource,
+        private readonly RequestResource $requestResource,
+        private readonly ItemResource $itemResource,
         private readonly ScopeConfigInterface $scopeConfig,
     ) {
     }
@@ -38,13 +41,8 @@ class ReceiptBuilder
      */
     public function build(int $requestId): ReceiptDto
     {
-        $conn = $this->resource->getConnection();
-
-        $rowSelect = $conn->select()
-            ->from($this->resource->getTableName(self::TABLE_REQUEST))
-            ->where('request_id = ?', $requestId);
-        $row = $conn->fetchRow($rowSelect);
-        if (!$row) {
+        $row = $this->requestResource->fetchRequestRow($requestId);
+        if ($row === null) {
             throw new ReceiptBuilderException(
                 new Phrase('Request %1 not found.', [$requestId]),
             );
@@ -62,20 +60,14 @@ class ReceiptBuilder
         // total split is read from the frozen columns on the request row below —
         // RequestCreator writes them at consent time before the first build, so the
         // receipt never re-derives the breakdown from the (mutable) order.
-        $itemSelect = $conn->select()
-            ->from(
-                $this->resource->getTableName(self::TABLE_ITEM),
-                ['order_item_id', 'sku', 'qty_withdraw', 'refund_amount'],
-            )
-            ->where('request_id = ?', $requestId)
-            ->order('order_item_id ASC');
-        $itemRows = $conn->fetchAll($itemSelect);
+        $itemRows = $this->itemResource->fetchReceiptLines($requestId);
 
         $items = [];
         foreach ($itemRows as $i) {
             $items[] = [
                 'order_item_id' => (int) $i['order_item_id'],
                 'sku'           => (string) $i['sku'],
+                'name'          => (string) ($i['name'] ?? ''),
                 'qty'           => (int) $i['qty_withdraw'],
                 'refund_amount' => number_format((float) $i['refund_amount'], 2, '.', ''),
             ];
@@ -154,7 +146,7 @@ class ReceiptBuilder
                         $storeId,
                     ),
                 ),
-                'article_ref'            => 'Art. 9 CRD',
+                'article_ref'            => 'Art. 11a Directive 2011/83/EU',
             ],
         );
     }

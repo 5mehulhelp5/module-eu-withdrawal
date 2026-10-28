@@ -50,14 +50,13 @@
             }
         }
         // Magento renders the session form_key inside the step2 form as
-        // <input name="form_key">. Bootstrap's `formKey` is null on pages where
-        // Template::getFormKey() isn't available, so read from DOM as a fallback.
-        if (!boot.formKey) {
+        // <input name="form_key">, and Magento_PageCache's form-key-provider.js
+        // refreshes that input from the cookie. Read it at send time so a page
+        // left open past a session change still posts the current key.
+        const currentFormKey = () => {
             const hidden = spa.querySelector('input[name="form_key"]');
-            if (hidden) {
-                boot.formKey = hidden.value;
-            }
-        }
+            return (hidden && hidden.value) || boot.formKey || '';
+        };
 
         const state = {
             items: new Map(),   // itemId -> {qty, price, name, thumb}
@@ -531,6 +530,8 @@
             const shippingEl = panels['4'].querySelector('[data-role="submitted-shipping"]');
             const vatRowEl = panels['4'].querySelector('[data-role="submitted-vat-row"]');
             const vatEl = panels['4'].querySelector('[data-role="submitted-vat"]');
+            const adjRowEl = panels['4'].querySelector('[data-role="submitted-adjustment-row"]');
+            const adjEl = panels['4'].querySelector('[data-role="submitted-adjustment"]');
             if (headerEl) {
                 headerEl.textContent = boot.orderIncrementId
                     ? ((boot.i18n && boot.i18n.orderPrefix) || 'Order #') + boot.orderIncrementId
@@ -545,8 +546,9 @@
                     if (d.qty <= 0) continue;
                     selectedCount += 1;
                     const line = lineNetFor(id, d.qty, d);
+                    const lineTax = lineTaxFor(id, d.qty);
                     subtotal += line;
-                    taxTotal += lineTaxFor(id, d.qty);
+                    taxTotal += lineTax;
 
                     const li = document.createElement('li');
                     li.className = 'mm-eu-w-summary-item';
@@ -568,7 +570,7 @@
 
                     const priceDiv = document.createElement('div');
                     priceDiv.className = 'mm-eu-w-summary-price';
-                    priceDiv.textContent = formatPrice(line, currency);
+                    priceDiv.textContent = formatPrice(roundHalfEven(line + lineTax, 4), currency);
                     li.appendChild(priceDiv);
 
                     itemsEl.appendChild(li);
@@ -588,14 +590,23 @@
                     }
                 }
                 taxTotal = roundHalfEven(taxTotal, 4);
+                const shipTax = fullReturn ? roundHalfEven(shippingTax, 4) : 0;
                 const shippingRefund = fullReturn ? roundHalfEven(shippingPaid + shippingTax, 4) : 0;
-                const grand = roundHalfEven(subtotal + taxTotal + shippingRefund, 4);
-                // The lines add up to the total, so the figure beside an item and
-                // the figure at the bottom never look like a contradiction.
+                let orderLevelAdj = 0;
+                const orderItemsBase = Number(boot.orderItemsBase || 0);
+                const orderLevelGap = Number(boot.orderLevelGap || 0);
+                if (Math.abs(orderLevelGap) > 0.005 && orderItemsBase > 0) {
+                    orderLevelAdj = roundHalfEven(orderLevelGap * (subtotal / orderItemsBase), 4);
+                }
+                const grand = roundHalfEven(subtotal + taxTotal + shippingRefund + orderLevelAdj, 4);
+                // Same figures as the review step: Subtotal and Shipping are gross,
+                // and the VAT line breaks out item and delivery VAT without adding it.
                 if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal + taxTotal, currency);
                 if (shippingEl) shippingEl.textContent = formatPrice(shippingRefund, currency);
                 if (vatRowEl) vatRowEl.hidden = boot.hideTax === true;
-                if (vatEl) vatEl.textContent = formatPrice(taxTotal, currency);
+                if (vatEl) vatEl.textContent = formatPrice(roundHalfEven(taxTotal + shipTax, 4), currency);
+                if (adjRowEl) adjRowEl.hidden = Math.abs(orderLevelAdj) < 0.005;
+                if (adjEl) adjEl.textContent = formatPrice(orderLevelAdj, currency);
                 if (totalEl) totalEl.textContent = formatPrice(grand, currency);
             }
         };
@@ -729,7 +740,7 @@
                     ),
                     itemReasons,
                     itemSeal,
-                    formKey: boot.formKey || '',
+                    formKey: currentFormKey(),
                 };
                 // Propagate the magic-link token AND the verified-order id so
                 // the server-side CustomerIdentityFactory can resolve the
@@ -764,7 +775,7 @@
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-Magento-Form-Key': boot.formKey || '',
+                            'X-Magento-Form-Key': currentFormKey(),
                         },
                         body: JSON.stringify(body),
                     });
@@ -813,7 +824,7 @@
             btn.disabled = true;
             try {
                 const body = new FormData();
-                body.append('form_key', boot.formKey || '');
+                body.append('form_key', currentFormKey());
                 body.append('request_id', requestId);
                 await fetch(url, {
                     method: 'POST',

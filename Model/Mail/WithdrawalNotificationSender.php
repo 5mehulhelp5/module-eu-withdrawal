@@ -170,6 +170,7 @@ class WithdrawalNotificationSender
                 'order_increment_id'      => $orderIncrementId,
                 'withdrawal_increment_id' => $withdrawalIncrementId,
                 'consumer_name'           => $consumerName,
+                'consumer_email'          => $toEmail,
                 'contact_email'           => $contactEmail,
                 'email_header_html'       => $layout->renderHeader(),
                 'email_footer_html'       => $layout->renderFooter(),

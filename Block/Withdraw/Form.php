@@ -23,6 +23,7 @@ use MageMe\EUWithdrawal\Model\Refund\ShippingAmountResolver;
 use MageMe\EUWithdrawal\Model\Frontend\OrderEligibilityResolver;
 use MageMe\EUWithdrawal\Model\Frontend\PeriodDaysConfigReader;
 use MageMe\EUWithdrawal\Model\Frontend\TaxDisplayConfig;
+use MageMe\EUWithdrawal\Model\Request\StatementIdentityResolver;
 
 class Form extends Template
 {
@@ -40,6 +41,7 @@ class Form extends Template
      * @param TaxDisplayConfig $taxDisplay
      * @param PeriodDaysConfigReader $periodDays
      * @param ShippingAmountResolver $shippingAmounts
+     * @param StatementIdentityResolver $statementIdentity
      * @param array $data
      */
     public function __construct(
@@ -54,6 +56,7 @@ class Form extends Template
         private readonly TaxDisplayConfig $taxDisplay,
         private readonly PeriodDaysConfigReader $periodDays,
         private readonly ShippingAmountResolver $shippingAmounts,
+        private readonly StatementIdentityResolver $statementIdentity,
         array $data = [],
     ) {
         parent::__construct($context, $data);
@@ -224,11 +227,10 @@ class Form extends Template
     /**
      * Admin-configured notice text for step 3 (Review & confirm). Merchants
      * fill it in system.xml under "Review & Confirm Page" — e.g. describing
-     * the prepaid return label, who pays shipping, etc.
+     * who pays return shipping. Empty by default, which leaves the notice out.
      *
-     * The shipped default is carried in every locale CSV, so a store that never touches the setting
-     * shows it in the storefront's own language. Wording a merchant typed in has no CSV entry and
-     * comes back untouched.
+     * The text goes through translation, so wording that has a locale CSV entry is shown in the
+     * storefront's own language; wording without one comes back untouched.
      */
     public function getReturnShippingNotice(): string
     {
@@ -240,7 +242,7 @@ class Form extends Template
     }
 
     /**
-     * Return-policy link rendered beside the shipping notice. Accepts either
+     * Return-policy link rendered on the review step, beside the shipping notice when there is one. Accepts either
      * absolute URLs (http/https) or store-relative paths, which are turned
      * into full URLs via UrlInterface.
      */
@@ -352,6 +354,16 @@ class Form extends Template
             return null;
         }
         return $this->eligibilityResolver->orderLevelDenyReason((int) $order->getEntityId());
+    }
+
+    /**
+     * Name and receipt address the statement will be filed under, shown on the review step.
+     *
+     * @return array{name: string, email: string}
+     */
+    public function getStatementIdentity(?OrderInterface $order): array
+    {
+        return $this->statementIdentity->resolve($order);
     }
 
     /**

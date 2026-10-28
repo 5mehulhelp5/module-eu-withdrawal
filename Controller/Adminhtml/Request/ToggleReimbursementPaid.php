@@ -9,19 +9,20 @@ namespace MageMe\EUWithdrawal\Controller\Adminhtml\Request;
 
 use MageMe\EUWithdrawal\Api\Data\RequestInterface;
 use MageMe\EUWithdrawal\Api\RequestRepositoryInterface;
+use MageMe\EUWithdrawal\Model\Refund\InterruptedAutoMemo;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
 use MageMe\EUWithdrawal\Model\RequestNote\RequestNoteRepository;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
- * Toggles the manual "reimbursement paid" mark on a request: sets
- * reimbursement_paid_at to now when unset, clears it when set, and records a plain
- * note either way. This covers refunds issued outside the request — offline, bank
+ * Sets or clears the manual "reimbursement paid" mark on a request, as the page asks
+ * (the `paid` parameter; without it, toggles the mark), and records a plain note
+ * either way. This covers refunds issued outside the request — offline, bank
  * transfer, external PSP, or a credit memo raised straight from the order — so the
  * grid due-state and the overdue digest stop treating the request as outstanding.
  *
@@ -34,7 +35,10 @@ class ToggleReimbursementPaid extends Action implements HttpPostActionInterface
 {
     public const ADMIN_RESOURCE = 'MageMe_EUWithdrawal::request_edit';
 
-    private const TABLE = 'mm_eu_withdrawal_request';
+    /**
+     * The state the page asks for: 1 marks the reimbursement as refunded, 0 clears the mark.
+     */
+    public const PAID_PARAM = 'paid';
 
     /**
      * Constructor.
@@ -42,15 +46,17 @@ class ToggleReimbursementPaid extends Action implements HttpPostActionInterface
      * @param Context $context
      * @param RequestRepositoryInterface $requestRepository
      * @param RequestNoteRepository $noteRepository
-     * @param ResourceConnection $resource
      * @param EventManager $eventManager
+     * @param RequestResource $requestResource
+     * @param InterruptedAutoMemo $interruptedAutoMemo
      */
     public function __construct(
         Context $context,
         private readonly RequestRepositoryInterface $requestRepository,
         private readonly RequestNoteRepository $noteRepository,
-        private readonly ResourceConnection $resource,
         private readonly EventManager $eventManager,
+        private readonly RequestResource $requestResource,
+        private readonly InterruptedAutoMemo $interruptedAutoMemo,
     ) {
         parent::__construct($context);
     }
@@ -83,22 +89,32 @@ class ToggleReimbursementPaid extends Action implements HttpPostActionInterface
         }
 
         $adminId = (string) ($this->_auth->getUser()?->getId() ?? '');
-        $clearing = $request->getReimbursementPaidAt() !== null;
+        // The page posts the state it asks for, so two clicks on the same link both mark (or both clear);
+        // without it the action toggles what it finds.
+        $wanted = $this->getRequest()->getParam(self::PAID_PARAM);
+        $clearing = $wanted === null ? $request->getReimbursementPaidAt() !== null : !(bool) (int) $wanted;
+        $successMessage = $clearing
+            ? (string) __('Refunded mark for request #%1 cleared.', $id)
+            : (string) __('Reimbursement for request #%1 marked as refunded.', $id);
 
         if ($clearing) {
-            $paidAt = null;
             $note = (string) __('Refunded mark cleared; the reimbursement is tracked as outstanding again.');
+            $changed = $this->requestResource->clearReimbursementPaid($id);
         } else {
-            $paidAt = gmdate('Y-m-d H:i:s');
             $note = (string) __('Reimbursement recorded as refunded outside the request.');
+            $changed = $this->requestResource->markReimbursementPaid($id, gmdate('Y-m-d H:i:s'));
         }
 
-        $connection = $this->resource->getConnection();
-        $connection->update(
-            $this->resource->getTableName(self::TABLE),
-            [RequestInterface::REIMBURSEMENT_PAID_AT => $paidAt],
-            ['request_id = ?' => (int) $request->getRequestId()],
-        );
+        if (!$changed) {
+            $current = $this->requestRepository->get($id);
+            if (($current->getReimbursementPaidAt() === null) === $clearing && $current->getRefundCreditmemoId() === null) {
+                // Already as asked, by this click's twin or another admin: nothing to record twice.
+                $this->messageManager->addSuccessMessage($successMessage);
+            } else {
+                $this->messageManager->addErrorMessage($this->notMarked($current));
+            }
+            return $redirect->setPath('*/request/edit', ['request_id' => $id]);
+        }
 
         $this->noteRepository->add(
             $id,
@@ -118,11 +134,26 @@ class ToggleReimbursementPaid extends Action implements HttpPostActionInterface
             ],
         );
 
-        $this->messageManager->addSuccessMessage(
-            $clearing
-                ? (string) __('Refunded mark for request #%1 cleared.', $id)
-                : (string) __('Reimbursement for request #%1 marked as refunded.', $id),
-        );
+        $this->messageManager->addSuccessMessage($successMessage);
         return $redirect->setPath('*/request/edit', ['request_id' => $id]);
+    }
+
+    /**
+     * Why the paid mark was not set: a refund holds the request, or it is refunded already.
+     *
+     * @param RequestInterface $request the request as it is now
+     * @return string
+     */
+    private function notMarked(RequestInterface $request): string
+    {
+        $holder = $this->interruptedAutoMemo->refundHolder($request);
+        if ($holder === RequestResource::LEASE_HOLDER_AUTO) {
+            return (string) __('Automatic refund in progress. Try again in a few minutes.');
+        }
+        if ($holder !== null) {
+            return (string) __('Another refund of this request is in progress. Reload the request in a few minutes.');
+        }
+
+        return (string) __('The request is already recorded as refunded.');
     }
 }

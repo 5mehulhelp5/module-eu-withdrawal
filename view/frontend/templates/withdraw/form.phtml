@@ -5,7 +5,7 @@
  */
 /** @var \MageMe\EUWithdrawal\Block\Withdraw\Form $block */
 /** @var \Magento\Framework\Escaper $escaper */
-$formKey      = method_exists($block, 'getFormKey') ? $block->getFormKey() : '';
+$formKey      = $block->getLayout()->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
 $finalizeUrl  = $block->getUrl('withdraw-contract/api/finalize');
 $orderHistory = $block->getUrl('sales/order/history');
 $indexUrl     = $block->getUrl('withdraw-contract');
@@ -43,7 +43,7 @@ $isFullOrder = $selectionModeVm !== null && $selectionModeVm->isFullOrderMode();
 // listing, not a selection.
 $isSelectionEditable = !$isFullOrder && !$noEligibleItems;
 
-// Art. 11a(3) confirmation label: counsel-signed per-locale whitelist string,
+// Art. 11a(3) confirmation label: built-in per-locale whitelist string,
 // rendered verbatim (never through __()).
 $confirmLabelVm = $block->getData('confirm_button_label_view_model');
 $confirmLabel = $confirmLabelVm !== null ? $confirmLabelVm->getLabel() : 'Confirm withdrawal';
@@ -72,6 +72,7 @@ $bundleContents = [];
 $orderForMeta   = $orderMeta instanceof \MageMe\EUWithdrawal\Block\Withdraw\OrderMeta
     ? $orderMeta->getOrder()
     : null;
+$statementIdentity = $block->getStatementIdentity($orderForMeta);
 // Hand the resolved order to the optional seal-photo step (Pro) so it can gate
 // on sealed items and write its session order-state; renders nothing on Free.
 $photoStepChild = $block->getChildBlock('photo_step');
@@ -133,6 +134,7 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
         'check' => '<polyline points="5 13 9 17 19 7"/>',
         'check-circle' => '<circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/>',
         'pin' => '<path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/>',
+        'user' => '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     ];
     $inner = $paths[$name] ?? '';
     return sprintf(
@@ -291,14 +293,18 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
                     $shippingNotice = method_exists($block, 'getReturnShippingNotice') ? $block->getReturnShippingNotice() : '';
                     $returnPolicyUrl = method_exists($block, 'getReturnPolicyUrl') ? $block->getReturnPolicyUrl() : '';
                     ?>
-                    <?php if ($shippingNotice !== ''): ?>
+                    <?php if ($shippingNotice !== '' || $returnPolicyUrl !== ''): ?>
                         <div class="mm-eu-w-review-row">
                             <span class="mm-eu-w-review-icon" aria-hidden="true">
                                 <?= /* @noEscape */ $icon('truck', 'mm-eu-w-review-icon-svg', 22) ?>
                             </span>
                             <div class="mm-eu-w-review-body">
-                                <div class="mm-eu-w-review-title"><?= $escaper->escapeHtml(__('Return shipping')) ?></div>
-                                <p class="mm-eu-w-review-text"><?= $escaper->escapeHtml($shippingNotice) ?></p>
+                                <?php if ($shippingNotice !== ''): ?>
+                                    <div class="mm-eu-w-review-title"><?= $escaper->escapeHtml(__('Return shipping')) ?></div>
+                                    <p class="mm-eu-w-review-text"><?= $escaper->escapeHtml($shippingNotice) ?></p>
+                                <?php else: ?>
+                                    <div class="mm-eu-w-review-title"><?= $escaper->escapeHtml(__('Return policy')) ?></div>
+                                <?php endif; ?>
                             </div>
                             <?php if ($returnPolicyUrl !== ''): ?>
                                 <a class="mm-eu-w-review-action"
@@ -318,6 +324,22 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
                             <p class="mm-eu-w-review-text"><?= $escaper->escapeHtml(__('Refund will be issued to your original payment method.')) ?></p>
                         </div>
                     </div>
+                    <?php if ($statementIdentity['name'] !== '' || $statementIdentity['email'] !== ''): ?>
+                    <div class="mm-eu-w-review-row" data-role="statement-identity">
+                        <span class="mm-eu-w-review-icon" aria-hidden="true">
+                            <?= /* @noEscape */ $icon('user', 'mm-eu-w-review-icon-svg', 22) ?>
+                        </span>
+                        <div class="mm-eu-w-review-body">
+                            <div class="mm-eu-w-review-title"><?= $escaper->escapeHtml(__('Your details')) ?></div>
+                            <?php if ($statementIdentity['name'] !== ''): ?>
+                                <p class="mm-eu-w-review-text"><?= $escaper->escapeHtml(__('Name')) ?>: <strong><?= $escaper->escapeHtml($statementIdentity['name']) ?></strong></p>
+                            <?php endif; ?>
+                            <?php if ($statementIdentity['email'] !== ''): ?>
+                                <p class="mm-eu-w-review-text"><?= $escaper->escapeHtml(__('Receipt confirmation to')) ?>: <strong><?= $escaper->escapeHtml($statementIdentity['email']) ?></strong></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
             <aside class="mm-eu-w-sidebar">
@@ -342,7 +364,7 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
                     </dl>
                     <div class="mm-eu-w-refund-policy">
                         <span class="mm-eu-w-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 9 17 19 7"/></svg></span>
-                        <p><?= $escaper->escapeHtml(__('The refund will be issued using your original payment method within 5-7 business days after we receive your return.')) ?></p>
+                        <p><?= $escaper->escapeHtml(__('We refund you no later than 14 days after we received your withdrawal. We may wait until we have the items back or you have shown that you sent them, whichever comes first. The refund goes to your original payment method.')) ?></p>
                     </div>
                 </div>
             </aside>
@@ -375,7 +397,7 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
                 </div>
                 <h1 class="mm-eu-w-hero-title"><?= $escaper->escapeHtml(__('Your return request has been submitted!')) ?></h1>
                 <p class="mm-eu-w-hero-subtitle">
-                    <?= $escaper->escapeHtml(__("We've emailed you a notification with your return details and a prepaid return label (if applicable). You have 14 days from the delivery date to send your items back.")) ?>
+                    <?= $escaper->escapeHtml(__("We've emailed you a notification with your return details. Please send the items back within 14 days of the day you told us you are withdrawing from the contract.")) ?>
                 </p>
                 <div class="mm-eu-w-rr-label"><?= $escaper->escapeHtml(__('Return request number')) ?></div>
                 <div class="mm-eu-w-rr-pill">
@@ -437,9 +459,17 @@ $icon = static function (string $name, string $class = 'mm-eu-w-icon', int $size
                 <span><?= $escaper->escapeHtml(__('Of which VAT')) ?></span>
                 <span data-role="submitted-vat">—</span>
             </div>
+            <div class="mm-eu-w-summary-line" data-role="submitted-adjustment-row" hidden>
+                <span><?= $escaper->escapeHtml(__('Order Adjustment')) ?></span>
+                <span data-role="submitted-adjustment">—</span>
+            </div>
             <div class="mm-eu-w-summary-total">
                 <span><?= $escaper->escapeHtml(__('Total refund')) ?></span>
                 <strong data-role="submitted-total">—</strong>
+            </div>
+            <div class="mm-eu-w-refund-policy">
+                <span class="mm-eu-w-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 9 17 19 7"/></svg></span>
+                <p><?= $escaper->escapeHtml(__('We refund you no later than 14 days after we received your withdrawal. We may wait until we have the items back or you have shown that you sent them, whichever comes first. The refund goes to your original payment method. The amount may be reduced only if the items lost value because they were handled more than needed to check them.')) ?></p>
             </div>
         </div>
 

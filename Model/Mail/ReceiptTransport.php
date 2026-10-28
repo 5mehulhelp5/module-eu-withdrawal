@@ -82,6 +82,7 @@ class ReceiptTransport
             $vars['contact_page_url']  = $layout->getContactUrl();
             $vars['store_name']        = $layout->getStoreName();
             $vars['store_url']         = $store->getBaseUrl();
+            $vars['consumer_email']    = $toEmail;
 
             if ($requestId !== null) {
                 $itemsTable = $this->itemsTableFactory->create();

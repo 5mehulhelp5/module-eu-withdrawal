@@ -17,7 +17,7 @@ class ConfirmButtonLabel implements ArgumentInterface
     }
 
     /**
-     * Counsel-signed Art. 11a(3) confirmation label for the current locale.
+     * Built-in Art. 11a(3) confirmation label for the current locale.
      * Frozen whitelist string — must not pass through __().
      */
     public function getLabel(): string

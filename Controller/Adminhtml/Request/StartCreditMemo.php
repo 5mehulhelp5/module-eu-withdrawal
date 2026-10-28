@@ -11,12 +11,15 @@ use MageMe\EUWithdrawal\Api\Data\RequestInterface;
 use MageMe\EUWithdrawal\Api\RequestRepositoryInterface;
 use MageMe\EUWithdrawal\Model\Refund\CreditmemoPlanBuilder;
 use MageMe\EUWithdrawal\Model\Refund\CreditmemoPrefill;
+use MageMe\EUWithdrawal\Model\Refund\InterruptedAutoMemo;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Magento\Backend\Model\Session as BackendSession;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Magento\Sales\Api\CreditmemoRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 
 /**
@@ -41,7 +44,17 @@ class StartCreditMemo extends Action implements HttpGetActionInterface
 {
     public const ADMIN_RESOURCE = 'MageMe_EUWithdrawal::request_edit';
 
-    public const SESSION_KEY = 'mageme_eu_withdrawal_pending_creditmemo_request_id';
+    /**
+     * Query parameter the credit memo form opened here carries into its save request, so only a memo
+     * saved from that form is linked to the request.
+     */
+    public const REQUEST_PARAM = 'mm_eu_withdrawal_request';
+
+    /**
+     * Opens the form to record, with an offline credit memo, a refund whose outcome was unknown and that
+     * the payment provider made. The form carries it into its save request too.
+     */
+    public const OFFLINE_RECORD_PARAM = 'mm_eu_withdrawal_offline';
 
     /**
      * Constructor.
@@ -49,15 +62,19 @@ class StartCreditMemo extends Action implements HttpGetActionInterface
      * @param Context $context
      * @param RequestRepositoryInterface $requestRepository
      * @param OrderRepositoryInterface $orderRepository
-     * @param BackendSession $backendSession
      * @param CreditmemoPlanBuilder $planBuilder
+     * @param InterruptedAutoMemo $interruptedAutoMemo
+     * @param CreditmemoRepositoryInterface $creditmemoRepository
+     * @param TimezoneInterface $timezone
      */
     public function __construct(
         Context $context,
         private readonly RequestRepositoryInterface $requestRepository,
         private readonly OrderRepositoryInterface $orderRepository,
-        private readonly BackendSession $backendSession,
         private readonly CreditmemoPlanBuilder $planBuilder,
+        private readonly InterruptedAutoMemo $interruptedAutoMemo,
+        private readonly CreditmemoRepositoryInterface $creditmemoRepository,
+        private readonly TimezoneInterface $timezone,
     ) {
         parent::__construct($context);
     }
@@ -101,6 +118,60 @@ class StartCreditMemo extends Action implements HttpGetActionInterface
             return $redirect->setPath('*/request/edit', ['request_id' => $id]);
         }
 
+        if ($this->interruptedAutoMemo->refundHolder($request) === RequestResource::LEASE_HOLDER_AUTO) {
+            $this->messageManager->addErrorMessage((string) __('Automatic refund in progress. Try again in a few minutes.'));
+            return $redirect->setPath('*/request/edit', ['request_id' => $id]);
+        }
+
+        $recordsOffline = (bool) $this->getRequest()->getParam(self::OFFLINE_RECORD_PARAM);
+        if ($this->interruptedAutoMemo->outcomeUnknownSince($request) !== null) {
+            if (!$recordsOffline) {
+                $this->messageManager->addErrorMessage(
+                    (string) __(
+                        'The outcome of an earlier refund of request #%1 is unknown: your payment provider may have refunded the customer. Check the refund in your payment provider, then resolve it on the request page.',
+                        $request->getIncrementId() ?? $id,
+                    ),
+                );
+                return $redirect->setPath('*/request/edit', ['request_id' => $id]);
+            }
+            $waitsUntil = $this->interruptedAutoMemo->outcomeActionsWaitUntil($request);
+            if ($waitsUntil !== null) {
+                $this->messageManager->addErrorMessage(
+                    (string) __(
+                        'The refund of request #%1 that ran out may still finish, so it can be recorded offline from %2. Reload the request then.',
+                        $request->getIncrementId() ?? $id,
+                        $this->timezone->formatDateTime($waitsUntil, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT),
+                    ),
+                );
+                return $redirect->setPath('*/request/edit', ['request_id' => $id]);
+            }
+        } else {
+            $recordsOffline = false;
+        }
+
+        $claimedAt = $this->interruptedAutoMemo->claimedAt($request);
+        if ($claimedAt !== null) {
+            $memoId = $this->interruptedAutoMemo->unlinkedMemoId($request);
+            if ($memoId !== null) {
+                $this->messageManager->addErrorMessage(
+                    (string) __(
+                        'Credit memo #%1 on this order already refunds the withdrawn items: the automatic credit memo for request #%2 stopped at %3 before it was linked to the request. Link credit memo #%1 to the request, or mark the request as refunded, instead of refunding again.',
+                        $this->creditmemoRepository->get($memoId)->getIncrementId(),
+                        $request->getIncrementId() ?? $id,
+                        $this->timezone->formatDateTime($claimedAt, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT),
+                    ),
+                );
+                return $redirect->setPath('*/request/edit', ['request_id' => $id]);
+            }
+            $this->messageManager->addNoticeMessage(
+                (string) __(
+                    'The automatic credit memo for request #%1 was interrupted at %2 before a credit memo was created. Check with your payment provider that the customer was not refunded before you refund again.',
+                    $request->getIncrementId() ?? $id,
+                    $this->timezone->formatDateTime($claimedAt, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT),
+                ),
+            );
+        }
+
         $orderId = (int) $request->getOrderId();
         try {
             $order = $this->orderRepository->get($orderId);
@@ -137,19 +208,20 @@ class StartCreditMemo extends Action implements HttpGetActionInterface
 
         $creditmemoData = $this->buildCreditmemoData($prefill);
 
-        // Stash the request id so the link-back observer can connect the
-        // saved credit memo back to this withdrawal request. Cleared on
-        // either successful save or any other admin action that bypasses
-        // the credit memo flow (the value is only read during creditmemo
-        // save_after, so a stale value is harmless).
-        $this->backendSession->setData(self::SESSION_KEY, $id);
-
-        $this->messageManager->addSuccessMessage(
-            (string) __(
-                'Pre-filled credit memo for withdrawal #%1 — review the qtys + shipping refund below, then click Refund Online or Refund Offline.',
-                $request->getIncrementId() ?? $id,
-            )
-        );
+        $query = ['creditmemo' => $creditmemoData, self::REQUEST_PARAM => $id];
+        if (!$recordsOffline) {
+            $this->messageManager->addSuccessMessage(
+                (string) __(
+                    'Pre-filled credit memo for withdrawal #%1 — review the qtys + shipping refund below, then click Refund Online or Refund Offline.',
+                    $request->getIncrementId() ?? $id,
+                )
+            );
+        } else {
+            $query[self::OFFLINE_RECORD_PARAM] = 1;
+            $this->messageManager->addNoticeMessage(
+                (string) __('This credit memo records the refund your payment provider made. Click Refund Offline. Refund Online is blocked here, so the customer is not refunded twice.'),
+            );
+        }
 
         return $redirect->setPath(
             'sales/order_creditmemo/new',
@@ -159,7 +231,7 @@ class StartCreditMemo extends Action implements HttpGetActionInterface
                 // Magento's URL builder only serializes scalar route params into the
                 // path and drops a nested array; the prefill rides in the query so
                 // Creditmemo\Loader receives it.
-                '_query'     => ['creditmemo' => $creditmemoData],
+                '_query'     => $query,
             ],
         );
     }

@@ -9,9 +9,10 @@ namespace MageMe\EUWithdrawal\Model\Refund;
 
 use MageMe\EUWithdrawal\Api\CreditmemoIssuerInterface;
 use MageMe\EUWithdrawal\Api\Data\CreditmemoIssueResultInterface;
+use MageMe\EUWithdrawal\Api\Data\RequestInterface;
 use MageMe\EUWithdrawal\Api\RequestRepositoryInterface;
 use MageMe\EUWithdrawal\Model\Refund\Source\IssueOutcome;
-use Magento\Framework\App\ResourceConnection;
+use MageMe\EUWithdrawal\Model\ResourceModel\Request as RequestResource;
 use Magento\Sales\Api\CreditmemoManagementInterface;
 use Magento\Sales\Api\Data\CreditmemoCreationArgumentsInterfaceFactory;
 use Magento\Sales\Api\Data\CreditmemoItemCreationInterfaceFactory;
@@ -42,8 +43,10 @@ class HeadlessCreditmemoIssuer implements CreditmemoIssuerInterface
         private readonly CreditmemoManagementInterface $creditmemoManagement,
         private readonly CreditmemoItemCreationInterfaceFactory $itemCreationFactory,
         private readonly CreditmemoCreationArgumentsInterfaceFactory $argsFactory,
-        private readonly ResourceConnection $resourceConnection,
+        private readonly RequestResource $requestResource,
         private readonly LoggerInterface $logger,
+        private readonly RefundInFlight $inFlight,
+        private readonly DoubleRefundAlert $doubleRefundAlert,
     ) {
     }
 
@@ -75,11 +78,6 @@ class HeadlessCreditmemoIssuer implements CreditmemoIssuerInterface
                 'request_id' => $requestId,
             ]);
             return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'existing memo on order');
-        }
-
-        if (!$this->claimRequestRow($requestId)) {
-            $fresh = $this->requestRepository->get($requestId);
-            return new CreditmemoIssueResult(IssueOutcome::ALREADY_DONE, $fresh->getRefundCreditmemoId());
         }
 
         $items = [];
@@ -132,14 +130,42 @@ class HeadlessCreditmemoIssuer implements CreditmemoIssuerInterface
             return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'online not available');
         }
 
-        $creditmemoId = $online
-            ? (int) $this->refundInvoice->execute($plan->invoiceId, $items, true, false, false, null, $args)
-            : $this->commitOffline($preview);
+        $token = bin2hex(random_bytes(16));
+        if (!$this->requestResource->claimRefundIssue($requestId, $token)) {
+            return $this->unclaimedOutcome($requestId, $order, $plan->items);
+        }
 
-        $fresh = $this->requestRepository->get($requestId);
-        if ($fresh->getRefundCreditmemoId() === null) {
-            $fresh->setRefundCreditmemoId($creditmemoId);
-            $this->requestRepository->save($fresh);
+        // While the claim holds the request, staff see the refund in progress and wait. A failure before
+        // core's payment step, or of an offline memo, moved no money and ends the hold at once: staff see
+        // the issue as interrupted. An online refund that fails after it may have paid out: the outcome
+        // stays unknown until staff check with the payment provider.
+        $started = false;
+        try {
+            $this->inFlight->start($requestId, $token);
+            $started = true;
+            $creditmemoId = $online
+                ? (int) $this->refundInvoice->execute($plan->invoiceId, $items, true, false, false, null, $args)
+                : $this->commitOffline($preview);
+            $linked = $this->requestResource->linkRefundCreditmemo($requestId, $creditmemoId, $token);
+        } catch (\Throwable $e) {
+            if ($started && $online && $this->inFlight->hasPaymentStarted()) {
+                if (!$this->requestResource->markRefundOutcomeUnknown($requestId, $token)) {
+                    $this->doubleRefundAlert->raiseLateFailure($requestId);
+                }
+            } else {
+                $this->requestResource->releaseRefundIssue($requestId, $token);
+            }
+            throw $e;
+        } finally {
+            if ($started) {
+                $this->inFlight->finish();
+            }
+        }
+        if (!$linked) {
+            // Staff recorded the refund another way while this issue ran: they sort out the two records.
+            $this->requestResource->releaseRefundIssue($requestId, $token);
+            $this->doubleRefundAlert->raise($requestId, $creditmemoId);
+            return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'memo not linked');
         }
         return new CreditmemoIssueResult(IssueOutcome::ISSUED, $creditmemoId);
     }
@@ -162,36 +188,33 @@ class HeadlessCreditmemoIssuer implements CreditmemoIssuerInterface
     }
 
     /**
-     * Re-reads the paid markers under FOR UPDATE in a short transaction, released
-     * before the preview/execute below so the lock never spans core's own OrderMutex.
-     * The row is claimable only while BOTH stay unset — a linked credit memo or a
-     * manual reimbursement-paid mark recorded between issue()'s initial read and this
-     * claim means the refund already went out, so the claim must fail.
+     * The claim failed: the refund was linked or marked paid in the meantime,
+     * or another issue claimed the request first. That issue may still be
+     * committing its memo or may have stopped half-way, so the request goes to
+     * staff, told whether a memo for the withdrawn items is already on the order.
+     *
+     * @param array<int,float> $oidQtys order_item_id => qty, the withdrawn set
      */
-    private function claimRequestRow(int $requestId): bool
+    private function unclaimedOutcome(int $requestId, OrderInterface $order, array $oidQtys): CreditmemoIssueResultInterface
     {
-        // Must run in its own transaction; issue() must never be wrapped in an outer
-        // DB transaction or this commit() would only nest, holding the row lock across execute().
-        $connection = $this->resourceConnection->getConnection();
-        $connection->beginTransaction();
-        try {
-            $select = $connection->select()
-                ->from(
-                    $this->resourceConnection->getTableName('mm_eu_withdrawal_request'),
-                    ['refund_creditmemo_id', 'reimbursement_paid_at'],
-                )
-                ->where('request_id = ?', $requestId)
-                ->forUpdate(true);
-            $row = $connection->fetchRow($select);
-            $connection->commit();
-        } catch (\Throwable $e) {
-            $connection->rollBack();
-            throw $e;
+        $fresh = $this->requestRepository->get($requestId);
+        if ($fresh->getRefundCreditmemoId() !== null) {
+            return new CreditmemoIssueResult(IssueOutcome::ALREADY_DONE, $fresh->getRefundCreditmemoId());
+        }
+        if ($fresh->getReimbursementPaidAt() !== null) {
+            return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'already reimbursed manually');
+        }
+        if ($this->requestResource->refundState($requestId)['state'] === RequestResource::REFUND_STATE_OUTCOME_UNKNOWN) {
+            return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'refund outcome unknown');
+        }
+        if ($this->existingMemoCoversWithdrawnItems($order, $oidQtys)) {
+            return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'existing memo on order');
+        }
+        if ($fresh->getData(RequestInterface::REFUND_ISSUE_CLAIMED_AT) === null) {
+            return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'refund in progress');
         }
 
-        return $row !== false
-            && ($row['refund_creditmemo_id'] === null || $row['refund_creditmemo_id'] === false)
-            && ($row['reimbursement_paid_at'] === null || $row['reimbursement_paid_at'] === false);
+        return new CreditmemoIssueResult(IssueOutcome::ROUTED_TO_MANUAL, null, 'issue interrupted');
     }
 
     /**
@@ -204,24 +227,9 @@ class HeadlessCreditmemoIssuer implements CreditmemoIssuerInterface
      */
     private function existingMemoCoversWithdrawnItems(OrderInterface $order, array $oidQtys): bool
     {
-        if ($oidQtys === []) {
-            return false;
-        }
-
-        $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()
-            ->from(['cm' => $this->resourceConnection->getTableName('sales_creditmemo')], [])
-            ->join(
-                ['cmi' => $this->resourceConnection->getTableName('sales_creditmemo_item')],
-                'cmi.parent_id = cm.entity_id',
-                ['order_item_id'],
-            )
-            ->where('cm.order_id = ?', (int) $order->getEntityId())
-            ->where('cm.state != ?', Creditmemo::STATE_CANCELED)
-            ->where('cmi.order_item_id IN (?)', array_keys($oidQtys))
-            ->where('cmi.qty > ?', 0)
-            ->limit(1);
-
-        return $connection->fetchOne($select) !== false;
+        return $this->requestResource->hasMemoOnOrderItems(
+            (int) $order->getEntityId(),
+            array_map('intval', array_keys($oidQtys)),
+        );
     }
 }
